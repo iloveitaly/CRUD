@@ -3,7 +3,7 @@
 // optional: $form_title, 
 ?>
 <?if(count($errors)):?>
-<b>Submitted Has Errors:</b>
+<b>Submitted Information Has Errors:</b>
 <ul>
 <?foreach($errors as $key => $value):?>
 	<li><b><?=isset($form[$key]->label) ? $form[$key]->label : inflector::titlize($key)?>:</b> <?=$value?></li>

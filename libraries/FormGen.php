@@ -1,6 +1,8 @@
 <?
 class FormGen_Core extends Controller {
 	public $columns;
+	protected $filteredColumns;
+	protected $objectReference;
 	
 	protected $relationshipIdentifier = '[]';
 	
@@ -32,6 +34,84 @@ class FormGen_Core extends Controller {
 		}
 		
 		return $message;
+	}
+	
+	// returns true if the post data validated against the form
+	public function generate($ref = null) {
+		$this->objectReference = $ref ? $ref : new Object();
+		$this->filteredColumns = array();
+		$this->form = Formo::factory($this->form_name ? $this->form_name : $this->orm_name)
+			->set('action', $this->form_action)
+			->set('_class', $this->form_class);
+		
+		// looks like formo strtolowers the $columnName
+		// this means that your dbs must use field_name instead of FieldName or you will get an undefined index error
+		
+		/*
+			There are a couple custom types:
+				
+				'custom' - a header or some other custom HTML, this is a special case in the fields.php view.
+				Note that custom fields ARE not auto included in email generation or other cases
+				
+				'view' - used mainly in the CRUD use case. This is for generating a column which only displays when viewing all the data
+		*/
+		
+		foreach($this->columns as $columnName => $columnInfo) {
+			if($columnInfo['restrict'] == "view") continue;
+			
+			$this->filteredColumns[$columnName] = $columnInfo;
+			
+			if($columnInfo['type'] == 'custom') continue;
+			
+			$options = $this->_getOptions($columnName, $columnInfo, $this->objectReference);
+			
+			if($columnInfo['type'] == 'checkbox') {
+				$this->form->add_group($columnName.$this->relationshipIdentifier, $options['values']);
+				
+				// for some reason we have to manually assign label... bug?
+				// this label is displayed in the error 
+				$this->form->$columnName->label = $options['label'];
+			} else {
+				$this->form->add($columnInfo['type'], $columnName, $options);
+			}
+		}
+
+		if($this->form->validate() && count($this->errors) == 0) {
+			// this adds the relationship identifier ([]) to the relationship names and merges the list with the column name list
+			// because the relationship_name is copied over to $columnNames as relationship_name[] during initialization
+			// we have to do add the suffix and then merge the columns since these columns do not exist in the actual table schema
+			
+			$relationshipCopyList = array_fill_keys(array_add_value_suffix(array_keys($this->relationships), $this->relationshipIdentifier), 'relationship');
+			$copyFieldList = isset($this->objectReference->table_columns) ? $this->objectReference->table_columns : $this->filteredColumns;
+			
+			foreach(array_merge($relationshipCopyList, $copyFieldList) as $columnName => $columnInfo) {
+				// Be nice and don't cause errors trying to copy over data to columns that don't exist
+				if(!isset($this->filteredColumns[$columnName])) continue;
+
+				if($this->filteredColumns[$columnName]['type'] == 'file') {
+					// use uploaded file name rather than the original file name
+					
+					if(isset($form->$columnName->data['file_name'])) { // this is for when the file name isn't required
+						$this->objectReference->$columnName = $form->$columnName->data['file_name'];
+					} else {
+						Kohana::log('debug', 'File data not submitted');
+					}
+				} else if(substr($columnName, -2) == $this->relationshipIdentifier) {
+					// multiple values isn't really natively supported in formo
+					// we have to go directly into the post data and retrieve the list
+					
+					$normalizedRelationshipName = substr($columnName, 0, -2);
+					$post = $this->input->post();
+					$this->objectReference->$normalizedRelationshipName = $post[$normalizedRelationshipName];
+				} else {
+					$this->objectReference->$columnName = $this->form->$columnName->value;
+				}
+			}
+			
+			return true;
+		}
+		
+		return false;
 	}
 	
 	protected function _getOptions($columnName, $columnData, $page) {
@@ -95,7 +175,7 @@ class FormGen_Core extends Controller {
 		return $values;
 	}
 	
-	private function isRelationshipField($fieldName) {
+	protected function isRelationshipField($fieldName) {
 		if(substr($fieldName, -2) == $this->relationshipIdentifier) {
 			return substr($fieldName, 0, -2);
 		} else {

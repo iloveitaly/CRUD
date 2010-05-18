@@ -123,112 +123,37 @@ class Crud_Core extends FormGen_Core {
 	
 	public function edit($id = null) {
 		// there are three 'modes' of this function: view, edit, and create
-		// if we aren't editing or creating we are viewing
-		// When you are in the process of editing a script you are NOT editing it.
+		//	if we aren't editing or creating we are viewing
+		//	When you are in the process of editing a object you are NOT editing it.
 		
 		$page = ORM::factory($this->orm_name, (int) $id);
-		$columnNames = array();
 
 		if(!$page->loaded) {// creating / viewing
 			$mode = "create";
 			$page = ORM::factory($this->orm_name);
-		} else {// editing
+		} else { // editing
 			$mode = "edit";
 			$page = ORM::factory($this->orm_name, (int) $id);
 		}
-				
-		$form = Formo::factory($this->form_name ? $this->form_name : $this->orm_name)
-			->set('action', $this->form_action)
-			->set('_class', $this->form_class);
 		
-		// looks like formo strtolowers the $columnName
-		// this means that your dbs must use field_name instead of FieldName or you will get an undefined index error
-		
-		/*
-			There are a couple custom types:
-				
-				'custom' - a header or some other custom HTML, this is a special case in the fields.php view.
-				Note that custom fields ARE not auto included in email generation or other cases
-				
-				'view' - used mainly in the CRUD use case. This is for generating a column which only displays when viewing all the data
-		*/
-		
-		foreach($this->columns as $columnName => $columnInfo) {
-			if($columnInfo['restrict'] == "view") continue;
-			
-			$columnNames[$columnName] = $columnInfo;
-			
-			if($columnInfo['type'] == 'custom') continue;
-			
-			$options = $this->_getOptions($columnName, $columnInfo, $page);
-			
-			if($columnInfo['type'] == 'checkbox') {
-				$form->add_group($columnName.$this->relationshipIdentifier, $options['values']);
-				
-				// for some reason we have to manually assign label... bug?
-				// this label is displayed in the error 
-				$form->$columnName->label = $options['label'];
-			} else {
-				$form->add($columnInfo['type'], $columnName, $options);
-			}
-		}
-
-		if($form->validate() && count($this->errors) == 0) {
-			// this adds the relationship identifier ([]) to the relationship names and merges the list with the column name list
-			// because the relationship_name is copied over to $columnNames as relationship_name[] during initialization
-			// we have to do add the suffix and then merge the columns since these columns do not exist in the actual table schema
-			
-			$relationshipCopyList = array_fill_keys(array_add_value_suffix(array_keys($this->relationships), $this->relationshipIdentifier), 'relationship');
-			
-			foreach(array_merge($relationshipCopyList, $page->table_columns) as $columnName => $columnInfo) {
-				// Be nice and don't cause errors trying to copy over data to columns that don't exist
-				if(!isset($columnNames[$columnName])) continue;
-
-				if($columnNames[$columnName]['type'] == 'file') {
-					// use uploaded file name rather than the original file name
-					
-					if(isset($form->$columnName->data['file_name'])) { // this is for when the file name isn't required
-						$page->$columnName = $form->$columnName->data['file_name'];
-					} else {
-						Kohana::log('debug', 'File data not submitted');
-					}
-				} else if(substr($columnName, -2) == $this->relationshipIdentifier) {
-					// multiple values isn't really natively supported in formo
-					// we have to go directly into the post data and retrieve the list
-					
-					$normalizedRelationshipName = substr($columnName, 0, -2);
-					$post = $this->input->post();
-					$page->$normalizedRelationshipName = $post[$normalizedRelationshipName];
-				} else {
-					$page->$columnName = $form->$columnName->value;
-				}
-			}
-			
-			// if the form is valid, we return the $mode and the $page content
-			// note that for the data to be saved $page->save() must be called afterward
-			
-			// you can use Crud as an ad hoc form generator
-			// simple set your form content to $result['data] & specify a custom $edit_template
-			
+		if($this->generate($page)) {
 			return array('mode' => $mode, 'data' => $page);
-		}
-		
-		$compiledForm = $form->get(TRUE);
-		
-		$this->form = $form;
+		} else {
+			$compiledForm = $this->form->get(TRUE);
 
-		return array(
-			'mode' => 'view',
-			'data' => View::factory($this->edit_template, array_merge($this->base_config, array(
-				'form' => $compiledForm,	// for the open/close form tags
-				'fields' => View::factory($this->fields_template, array(
-					'columns' => $columnNames,
-					'form' => $compiledForm
-				)),
-				'errors' => array_merge($form->get_errors(), $this->errors),
-				'submit_title' => empty($this->base_config['submit_title']) ? ($mode == "edit" ? 'Save Changes' : 'Create New '.$this->base_config['title']) : $this->base_config['submit_title']	// you overide this title by accessing $this->template->content->submit_title in the subclass
-			)))
-		);
+			return array(
+				'mode' => 'view',
+				'data' => View::factory($this->edit_template, array_merge($this->base_config, array(
+					'form' => $compiledForm,	// for the open/close form tags
+					'fields' => View::factory($this->fields_template, array(
+						'columns' => $this->filteredColumns,
+						'form' => $compiledForm
+					)),
+					'errors' => array_merge($this->form->get_errors(), $this->errors),
+					'submit_title' => empty($this->base_config['submit_title']) ? ($mode == "edit" ? 'Save Changes' : 'Create New '.$this->base_config['title']) : $this->base_config['submit_title']	// you overide this title by accessing $this->template->content->submit_title in the subclass
+				)))
+			);
+		}
     }
 	
 	public function delete($id = null) {
