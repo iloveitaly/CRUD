@@ -1,6 +1,5 @@
 <?
-class Crud_Core extends Controller {
-	public $columns;
+class Crud_Core extends FormGen_Core {
 	public $relationships;
 	public $errors;
 	
@@ -12,10 +11,9 @@ class Crud_Core extends Controller {
 	public $view_template = 'view';
 	public $fields_template = 'fields';	// template to use for field generation
 	public $form_class = 'hform';
-	public $form_action = '';			// auto set in the constructor
-	public $form_name = '';
+	public $form_action = '';			// auto set in the constructor, specify if using in a non CMS solution
+	public $form_name = '';				// if form_name isn't set then the orn_name is used for the <form name>
 	
-	protected $relationshipIdentifier = '[]';
 	public $form;
 	
 	function __construct($data_holder) {
@@ -39,6 +37,8 @@ class Crud_Core extends Controller {
 		//		
 				
 		// add relationships to the column list, we have to generate content functions & attempt to guess default values
+		// note that relationships != checkbox / radio groups. The relationship functionality was built for database relationships
+		
 		foreach($this->relationships as $name => $relationshipInfo) {
 			// the tricky label code strips out the commonality between a category listing & the relationship, ex:
 			//	news_item_categories
@@ -144,16 +144,26 @@ class Crud_Core extends Controller {
 		// looks like formo strtolowers the $columnName
 		// this means that your dbs must use field_name instead of FieldName or you will get an undefined index error
 		
+		/*
+			There are a couple custom types:
+				
+				'custom' - a header or some other custom HTML, this is a special case in the fields.php view.
+				Note that custom fields ARE not auto included in email generation or other cases
+				
+				'view' - used mainly in the CRUD use case. This is for generating a column which only displays when viewing all the data
+		*/
+		
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == "view") continue;
-			else $columnNames[$columnName] = $columnInfo;
+			
+			$columnNames[$columnName] = $columnInfo;
 			
 			if($columnInfo['type'] == 'custom') continue;
 			
-			$options = $this->_getFormoOptions($columnName, $columnInfo, $page);
+			$options = $this->_getOptions($columnName, $columnInfo, $page);
 			
 			if($columnInfo['type'] == 'checkbox') {
-				$form->add_group($columnName.'[]', $options['values']);
+				$form->add_group($columnName.$this->relationshipIdentifier, $options['values']);
 				
 				// for some reason we have to manually assign label... bug?
 				// this label is displayed in the error 
@@ -187,7 +197,7 @@ class Crud_Core extends Controller {
 					// we have to go directly into the post data and retrieve the list
 					
 					$normalizedRelationshipName = substr($columnName, 0, -2);
-					$post = input::instance()->post();
+					$post = $this->input->post();
 					$page->$normalizedRelationshipName = $post[$normalizedRelationshipName];
 				} else {
 					$page->$columnName = $form->$columnName->value;
@@ -230,109 +240,6 @@ class Crud_Core extends Controller {
 		$post->delete();
 		
 		return true;
-	}
-	
-	// this should be moved into another class... but for now this will do
-	
-	public function generate_email_message() {
-		$post = $this->input->post();
-		$message = '';
-		
-		foreach($this->columns as $columnName => $columnInfo) {
-			// we skip custom (aka headers / title blocks) and 'display only' elements
-			if($columnInfo['type'] == 'custom') continue;
-			if($columnInfo['restrict'] == 'view') continue;
-			
-			$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']).": ";
-			
-			if($columnInfo['type'] == 'checkbox') {
-				// if we are processing a checkbox they could select multiple options
-				// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
-				
-				$convertedList = array();
-				foreach($post[$columnName] as $key) {
-					// we strip tags here b/c it is possible to embed sub fields within the text of a checkbox label
-					$convertedList[] = strip_tags($this->columns[$columnName]['values'][$key]);
-				}
-				
-				$message.= implode(', ', $convertedList)."\n";
-			} else {
-				$message .= $post[$columnName]."\n";
-			}
-		}
-		
-		return $message;
-	}
-	
-	// private functions
-	
-	protected function _getFormoOptions($columnName, $columnData, $page) {
-		// values is an array of options to be sent to formo->add
-		$values = array('required' => 1);
-		
-		// the $page should have precedent over predefined constants ONLY if it was loaded
-		
-		if($page->loaded && isset($page->$columnName)) {
-			$values['value'] = $page->$columnName;
-		} else if(isset($columnData['value'])) {
-			$values['value'] = $columnData['value'];
-		}
-		
-		if($accessField = $this->isRelationshipField($columnName)) {
-			// then we are dealing with a relationship
-
-			if($columnData['type'] == 'mselect') {
-				// get a list of IDs
-				$primaryKey = $page->primary_key;
-				$selectedList = iterator_to_array($page->$accessField);
-				$idList = array();
-				
-				foreach($selectedList as $relatedObject) {
-					$idList[] = $relatedObject->$primaryKey;
-				}
-
-				$values['selected_values'] = $idList;
-			} else if($columnData['type'] == 'select') {
-				
-			}
-		}
-		
-		// this is a list of fields to be copied over as attributes (unless they are 'special' fields) of the HTML element
-		$copyList = array('style', 'class', 'required', 'label', 'multiple', 'allowed_types', 'max_size', 'upload_path', 'rule', 'error_msg');
-		
-		foreach($copyList as $attrib) {
-			if(isset($columnData[$attrib])) {
-				$values[$attrib] = $columnData[$attrib];
-			}
-		}
-		
-		// if the required field is set auto set class='required' if not explicitly defined
-		if($values['required'] && !isset($values['class'])) {
-			$values['class'] = 'required';
-		}
-		
-		// make the labels for the form fields look nice
-		// < 3 => probably an abbreviation
-		if(!isset($values['label'])) {
-			$values['label'] = inflector::titlize($columnName);
-		}
-		
-		if(strrpos($columnData['type'], 'select') !== FALSE || $columnData['type'] == 'checkbox') {
-			// check to make sure values is an array, if not it will cause issues in select library
-			if(!is_array($columnData['values'])) Kohana::log('error', 'CRUD form generator found select values error for field '.$columnName);
-			
-			$values['values'] = $columnData['values'];
-		}
-		
-		return $values;
-	}
-	
-	private function isRelationshipField($fieldName) {
-		if(substr($fieldName, -2) == $this->relationshipIdentifier) {
-			return substr($fieldName, 0, -2);
-		} else {
-			return FALSE;
-		}
 	}
 }
 
