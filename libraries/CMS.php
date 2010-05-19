@@ -50,7 +50,7 @@ class CMS_Core extends Template_Controller {
 		
 		$this->template->title = $this->base_config['title'];
 		$this->template->header = View::factory('header');
-
+		
 		$this->template->head = Head::instance();
 		$this->template->head->javascript->append_file(Kohana::config('admin.js'));
 		$this->template->head->css->append_file(Kohana::config('admin.css'));
