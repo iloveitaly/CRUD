@@ -1,15 +1,7 @@
 <?
 class Crud_Core extends FormGen_Core {
 	public $relationships;
-	
-	// allow display customization
-	public $edit_template = 'form';
-	public $view_template = 'view';
-	public $fields_template = 'fields';	// template to use for field generation
-	public $form_class = 'hform';
-	public $form_action = '';			// auto set in the constructor, specify if using in a non CMS solution
-	public $form_name = '';				// if form_name isn't set then the orn_name is used for the <form name>
-	
+		
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
 		
@@ -17,7 +9,8 @@ class Crud_Core extends FormGen_Core {
 		// It passes off the column names & relationships and that is about it, no more column managment is done by CMS
 		
 		$this->relationships = isset($data_holder->relationships) ? $data_holder->relationships : array(); // for direct (non CMS) use Crud, we might not always need relationships
-				
+		$this->orm_name = $data_holder->orm_name;
+		
 		// add relationships to the column list, we have to generate content functions & attempt to guess default values
 		// note that relationships != checkbox / radio groups. The relationship functionality was built for database relationships
 		
@@ -89,7 +82,7 @@ class Crud_Core extends FormGen_Core {
 		//	When you are in the process of editing a object you are NOT editing it.
 		
 		$page = ORM::factory($this->orm_name, (int) $id);
-
+		
 		if(!$page->loaded) {// creating / viewing
 			$mode = "create";
 			$page = ORM::factory($this->orm_name);
@@ -98,23 +91,22 @@ class Crud_Core extends FormGen_Core {
 			$page = ORM::factory($this->orm_name, (int) $id);
 		}
 		
-		if($this->generate($page)) {
+		if($this->process(&$page)) {
 			return array('mode' => $mode, 'data' => $page);
 		} else {
-			$compiledForm = $this->form->get(TRUE);
-
-			return array(
-				'mode' => 'view',
-				'data' => View::factory($this->edit_template, array_merge($this->base_config, array(
-					'form' => $compiledForm,	// for the open/close form tags
-					'fields' => View::factory($this->fields_template, array(
-						'columns' => $this->filteredColumns,
-						'form' => $compiledForm
-					)),
-					'errors' => array_merge($this->form->get_errors(), $this->errors),
-					'submit_title' => empty($this->base_config['submit_title']) ? ($mode == "edit" ? 'Save Changes' : 'Create New '.$this->base_config['title']) : $this->base_config['submit_title']	// you overide this title by accessing $this->template->content->submit_title in the subclass
-				)))
-			);
+			// you overide this title by accessing $this->template->content->submit_title in the subclass
+			
+			if(empty($this->base_config['submit_title'])) {
+				if($mode == "edit") {
+					$this->base_config['submit_title'] = 'Save Changes';
+				} else {
+					$this->base_config['submit_title'] = 'Create New '.$this->base_config['title'];
+				}
+			} else {
+				$submitTitle = $this->base_config['submit_title'];
+			}
+			
+			return array('mode' => 'view', 'data' => $this->generate());
 		}
     }
 	
