@@ -7,5 +7,5 @@ $config['rpp'] = 30;
 $config['header'] = TRUE;
 $config['timezone_offset'] = 0;
 
-$config['base'] = '/admin/';
+$config['base'] = '/';
 $config['manage_relationships'] = true;

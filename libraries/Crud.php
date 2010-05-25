@@ -1,7 +1,5 @@
 <?
 class Crud_Core extends FormGen_Core {
-	public $relationships;
-		
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
 		

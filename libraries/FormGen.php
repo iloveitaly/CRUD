@@ -2,6 +2,8 @@
 class FormGen_Core extends Controller {
 	public $columns;
 	public $form;
+	public $relationships;
+	
 	protected $filteredColumns;
 	protected $objectReference;
 	
@@ -28,6 +30,7 @@ class FormGen_Core extends Controller {
 		
 		$this->columns = is_array($data_holder) ? $data_holder['columns'] : $data_holder->columns;
 		$this->errors = array();
+		$this->relationships = array();
 		$this->base_config = & $data_holder->base_config;	// there is no need to copy the array, referencing it allows more flexibility
 		
 		// if the config is empty set some default values
