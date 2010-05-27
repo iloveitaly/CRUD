@@ -28,7 +28,9 @@ class FormGen_Core extends Controller {
 		// if you want to overide any of the values in base_config in a super-super class (the class subclassing CMS) this may cause problems
 		// note that although orm_name is 'used' in this class it is NOT required, it is only referenced to have built in support for CRUD
 		
-		$this->columns = is_array($data_holder) ? $data_holder['columns'] : $data_holder->columns;
+		$data_holder = is_array($data_holder) ? (object) $data_holder : $data_holder;
+		
+		$this->columns = $data_holder->columns;
 		$this->errors = array();
 		$this->relationships = array();
 		$this->base_config = & $data_holder->base_config;	// there is no need to copy the array, referencing it allows more flexibility
@@ -52,25 +54,30 @@ class FormGen_Core extends Controller {
 		$message = '';
 		
 		foreach($this->columns as $columnName => $columnInfo) {
-			// we skip custom (aka headers / title blocks) and 'display only' elements
-			if($columnInfo['type'] == 'custom') continue;
 			if($columnInfo['restrict'] == 'view') continue;
 			
-			$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']).": ";
+			// if you want to hide a custom element from the email generation set restrict = view
+			if($columnInfo['type'] != 'custom')
+				$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']).": ";
 			
-			if($columnInfo['type'] == 'checkbox') {
-				// if we are processing a checkbox they could select multiple options
-				// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
+			switch($columnInfo['type']) {
+				case 'checkbox':
+					// if we are processing a checkbox they could select multiple options
+					// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
 				
-				$convertedList = array();
-				foreach($post[$columnName] as $key) {
-					// we strip tags here b/c it is possible to embed sub fields within the text of a checkbox label
-					$convertedList[] = strip_tags($this->columns[$columnName]['values'][$key]);
-				}
+					$convertedList = array();
+					foreach($post[$columnName] as $key) {
+						// we strip tags here b/c it is possible to embed sub fields within the text of a checkbox label
+						$convertedList[] = strip_tags($this->columns[$columnName]['values'][$key]);
+					}
 				
-				$message.= implode(', ', $convertedList)."\n";
-			} else {
-				$message .= $post[$columnName]."\n";
+					$message.= implode(', ', $convertedList)."\n";
+					break;
+				case 'custom':
+					$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
+					break;
+				default:
+					$message .= $post[$columnName]."\n";
 			}
 		}
 		
@@ -124,7 +131,7 @@ class FormGen_Core extends Controller {
 			// we have to do add the suffix and then merge the columns since these columns do not exist in the actual table schema
 			
 			$relationshipCopyList = array_fill_keys(array_add_value_suffix(array_keys($this->relationships), $this->relationshipIdentifier), 'relationship');
-			$copyFieldList = isset($this->objectReference->table_columns) ? $this->objectReference->table_columns : $this->filteredColumns;
+			$copyFieldList = is_subclass_of($this->objectReference, "ORM_Core") ? $this->objectReference->table_columns : $this->filteredColumns;
 			
 			foreach(array_merge($relationshipCopyList, $copyFieldList) as $columnName => $columnInfo) {
 				// Be nice and don't cause errors trying to copy over data to columns that don't exist

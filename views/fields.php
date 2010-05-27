@@ -24,7 +24,7 @@ foreach($columns as $name => $info) {
 			echo $info['label'];
 			break;
 		default:
-			echo "<p class='{$info['format']}'><label for=\"$name\">{$form[$name]->label}</label>".$form[$name]->render()."</p>";
+			echo "<p".(empty($info['format']) ? '' : " class='{$info['format']}'")."><label for=\"$name\">{$form[$name]->label}</label>".$form[$name]->render()."</p>";
 			break;
 	}
 }
