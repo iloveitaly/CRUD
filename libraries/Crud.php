@@ -3,6 +3,8 @@ class Crud_Core extends FormGen_Core {
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
 		
+		$data_holder = is_array($data_holder) ? (object) $data_holder : $data_holder;
+		
 		// Note that CMS uses this object as a sort of core module
 		// It passes off the column names & relationships and that is about it, no more column managment is done by CMS
 		

@@ -92,7 +92,8 @@ class Head_Meta extends Head_Partial {
 }
 
 class Head_Title extends Head_Partial {
-
+	private $seperator = ' - '; // ' &mdash; '
+	
 	public function __construct($title = '')
 	{
 		$this['title'] = $title;
@@ -106,13 +107,13 @@ class Head_Title extends Head_Partial {
 
 	public function append($title)
 	{
-		$this['title'] .= ' &mdash; '.$title;
+		$this['title'] .= $this->seperator.$title;
 		return $this;
 	}
 
 	public function prepend($title)
 	{
-		$this['title'] = $title.' &mdash; '.$this['title'];
+		$this['title'] = $title.$this->seperator.$this['title'];
 		return $this;
 	}
 
