@@ -218,8 +218,9 @@ class FormGen_Core extends Controller {
 		}
 		
 		// if the required field is set auto set class='required' if not explicitly defined
-		if($values['required'] && !isset($values['class'])) {
-			$values['class'] = 'required';
+		if($values['required']) {
+			if(!isset($values['class'])) $values['class'] = 'required';
+			else $values['class'] .= ' required';
 		}
 		
 		// make the labels for the form fields look nice
