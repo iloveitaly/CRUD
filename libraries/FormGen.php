@@ -136,7 +136,8 @@ class FormGen_Core extends Controller {
 			foreach(array_merge($relationshipCopyList, $copyFieldList) as $columnName => $columnInfo) {
 				// Be nice and don't cause errors trying to copy over data to columns that don't exist
 				if(!isset($this->filteredColumns[$columnName])) continue;
-
+				if($this->filteredColumns[$columnName]['type'] == 'custom' && !isset($this->form->$columnName)) continue;
+				
 				if($this->filteredColumns[$columnName]['type'] == 'file') {
 					// use uploaded file name rather than the original file name
 					
