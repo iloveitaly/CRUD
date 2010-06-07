@@ -53,6 +53,9 @@ class FormGen_Core extends Controller {
 		$post = $this->input->post();
 		$message = '';
 		
+		// this could be a bit more advanced: question --> answer inflections, i.e.:
+		// How many people at parish? --> People at parish:
+		
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
 			

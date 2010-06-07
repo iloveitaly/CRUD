@@ -1,5 +1,7 @@
 <?
 class Crud_Core extends FormGen_Core {
+	protected $autoAdjustRanking = true;
+	
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
 		
@@ -92,6 +94,10 @@ class Crud_Core extends FormGen_Core {
 		}
 		
 		if($this->process(&$page)) {
+			if($this->autoAdjustRanking && isset($this->columns['rank'])) {
+				$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $page);
+			}
+			
 			return array('mode' => $mode, 'data' => $page);
 		} else {
 			// you overide this title by accessing $this->template->content->submit_title in the subclass
@@ -119,6 +125,38 @@ class Crud_Core extends FormGen_Core {
 		$post->delete();
 		
 		return true;
+	}
+	
+	// $group:		Elements in the rank group
+	// $adjusted:	The element with the adjusted rank (note that $adjusted must have the adjusted rank & $group must contain the non-adjusted version of $adjusted)
+	protected function adjustRankOrdering($group, $adjusted) {
+		// determine which direction the adjustment is being made and then push / pull the ranking on forward / prev items accordingly
+		
+		$newRank = $adjusted->rank;
+		$oldRank = -1;
+		
+		// find the original
+		foreach($group as $item) {
+			if($item->id == $adjusted->id) {
+				$oldRank = $item->rank;
+				break;
+			}
+		}
+		
+		if($newRank == $oldRank) return;
+		
+		// 1 = decreasing (so the current ranked element should be increased), -1 = increasing (so the current ranked element should be decreased)
+		$direction = $newRank - $oldRank > 0 ? -1 : 1;
+		
+		foreach($group as $item) {
+			// find the element in the group with the new ranking choice and swap positions 
+			if($item->rank == $newRank) {
+				// then someone has our ranking place
+				$item->rank = $item->rank + $direction;
+				$item->save();
+				break;
+			}
+		}
 	}
 }
 
