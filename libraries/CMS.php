@@ -5,7 +5,7 @@ class CMS_Core extends Template_Controller {
 	public $controller_name;
 	public $base_config;
 	public $relationship_controllers;
-	
+	public $autoAdjustRanking = false;
 	public $columns = array();
 	
 	/*
@@ -174,6 +174,12 @@ window.addEvent("domready", function() {
 			foreach($result['mode'] == 'edit' ? $this->editDefaults : $this->createDefaults as $key => $value) {
 				if(in_array($key, $keyList)) {
 					$result['data']->$key = $value;
+				}
+			}
+			
+			if($result['mode'] == 'edit') {
+				if($this->autoAdjustRanking && isset($this->columns['rank'])) {
+					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $page);
 				}
 			}
 			
