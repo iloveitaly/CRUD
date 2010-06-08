@@ -194,6 +194,38 @@ window.addEvent("domready", function() {
 		}
 	}
 	
+	// $group:		Elements in the rank group
+	// $adjusted:	The element with the adjusted rank (note that $adjusted must have the adjusted rank & $group must contain the non-adjusted version of $adjusted)
+	protected function adjustRankOrdering($group, $adjusted) {
+		// determine which direction the adjustment is being made and then push / pull the ranking on forward / prev items accordingly
+		
+		$newRank = $adjusted->rank;
+		$oldRank = -1;
+		
+		// find the original
+		foreach($group as $item) {
+			if($item->id == $adjusted->id) {
+				$oldRank = $item->rank;
+				break;
+			}
+		}
+		
+		if($newRank == $oldRank) return;
+		
+		// 1 = decreasing (so the current ranked element should be increased), -1 = increasing (so the current ranked element should be decreased)
+		$direction = $newRank - $oldRank > 0 ? -1 : 1;
+		
+		foreach($group as $item) {
+			// find the element in the group with the new ranking choice and swap positions 
+			if($item->rank == $newRank) {
+				// then someone has our ranking place
+				$item->rank = $item->rank + $direction;
+				$item->save();
+				break;
+			}
+		}
+	}
+	
 	public function __call($method, $arguments) {
 		// this is for editing of relationships
 		
