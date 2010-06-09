@@ -106,7 +106,7 @@ window.addEvent("domready", function() {
 	public function view($options = array('edit', 'delete', 'add'), $query_object = null) {
 		$columnNames = $this->crud->view();
 		$db = Database::instance();
-		$rpp = Kohana::config('admin.rpp');
+		$rpp = Kohana::config('pagination.default.items_per_page');
 		
 		// two sorting keys: s => sort key, d => sort direction
 		$query = input::instance()->get();
