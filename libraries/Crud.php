@@ -24,25 +24,40 @@ class Crud_Core extends FormGen_Core {
 			$simpleTitle = starts_with($this->orm_name, $name) ? inflector::titlize(substr($name, strlen($this->orm_name))) : inflector::titlize($name);
 			
 			// default type to multi (many-to-many)
+			// default restrict to none
 			
 			if(empty($relationshipInfo['type'])) $relationshipInfo['type'] = 'multi';
+			if(empty($relationshipInfo['restrict'])) $relationshipInfo['restrict'] = 'none';
 			
 			if($relationshipInfo['type'] == 'one') {
 				// for one-to-one we don't use a pivot table
 				// convention is to use: singular_table_id
 				
-				$this->columns[$name.'_id'] = array(
+				// _v = view field
+				$this->columns[$name.'_id_v'] = array(
 					'label' => $simpleTitle,
-					'type' => 'select',
-					'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id')
+					'type' => 'custom',
+					'content' => create_function('$ob', 'return ORM::factory("'.inflector::singular($name).'", $ob->'.$name.'_id)->'.$relationshipInfo['display_key'].';'),
+					'restrict' => 'view'
 				);
+				
+				if($relationshipInfo['restrict'] == 'view') {
+					// this isn't a perfect method since there can be duplicate display_keys and then only one displays
+					
+					$this->columns[$name.'_id'] = array(
+						'label' => $simpleTitle,
+						'type' => 'select',
+						'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id'),
+						'restrict' => 'edit'
+					);
+				}
 			} else { // many
 				// for the view
 			
 				$this->columns[$name] = array(
 					'restrict' => 'view',
 					'label' => $simpleTitle,
-					'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')			
+					'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')
 				);
 						
 				// for the edit field
