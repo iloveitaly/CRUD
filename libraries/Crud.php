@@ -13,6 +13,7 @@ class Crud_Core extends FormGen_Core {
 		
 		// add relationships to the column list, we have to generate content functions & attempt to guess default values
 		// note that relationships != checkbox / radio groups. The relationship functionality was built for database relationships
+		// the $name should be the relationship field in the source database (i.e. the study_category_id field's $name should be study_category)
 		
 		foreach($this->relationships as $name => $relationshipInfo) {
 			// the tricky label code strips out the commonality between a category listing & the relationship, ex:
@@ -20,8 +21,12 @@ class Crud_Core extends FormGen_Core {
 			//	news_items
 			//	resulting nlabel: Categories
 			
-			// note that the orm_name will be the singular of the plural db name
-			$simpleTitle = starts_with($this->orm_name, $name) ? inflector::titlize(substr($name, strlen($this->orm_name))) : inflector::titlize($name);
+			// note that the orm_name will be the singular of the plural db name in many-to-many (or one-to-many) database structures
+			if(empty($relationshipInfo['label'])) {
+				$relationshipLabel = starts_with($this->orm_name, $name) ? inflector::titlize(substr($name, strlen($this->orm_name))) : inflector::titlize($name);
+			} else {
+				$relationshipLabel = $relationshipInfo['label'];
+			}
 			
 			// default type to multi (many-to-many)
 			// default restrict to none
@@ -35,7 +40,7 @@ class Crud_Core extends FormGen_Core {
 				
 				// _v = view field
 				$this->columns[$name.'_id_v'] = array(
-					'label' => $simpleTitle,
+					'label' => $relationshipLabel,
 					'type' => 'custom',
 					'content' => create_function('$ob', 'return ORM::factory("'.inflector::singular($name).'", $ob->'.$name.'_id)->'.$relationshipInfo['display_key'].';'),
 					'restrict' => 'view'
@@ -45,7 +50,7 @@ class Crud_Core extends FormGen_Core {
 					// this isn't a perfect method since there can be duplicate display_keys and then only one displays
 					
 					$this->columns[$name.'_id'] = array(
-						'label' => $simpleTitle,
+						'label' => $relationshipLabel,
 						'type' => 'select',
 						'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id'),
 						'restrict' => 'edit'
@@ -56,7 +61,7 @@ class Crud_Core extends FormGen_Core {
 			
 				$this->columns[$name] = array(
 					'restrict' => 'view',
-					'label' => $simpleTitle,
+					'label' => $relationshipLabel,
 					'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')
 				);
 						
@@ -64,7 +69,7 @@ class Crud_Core extends FormGen_Core {
 			
 				$this->columns[$name.$this->relationshipIdentifier] = array_merge($relationshipInfo, array(
 					'restrict' => 'edit',
-					'label' => $simpleTitle,
+					'label' => $relationshipLabel,
 					'type' => 'mselect',
 					'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id')
 				));
