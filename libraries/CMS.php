@@ -67,8 +67,11 @@ class CMS_Core extends Template_Controller {
 		// only check for text editors when we are not in edit mode
 		
 		if(Router::$method != 'view' && Router::$method != 'index') {
+			$editorAdded = false;
+			$datePickerAdded = false;
+			
 			foreach($this->crud->columns as $columnName => $columnInfo) {
-				if($columnInfo['type'] == 'textarea') {
+				if($columnInfo['type'] == 'textarea' && !$editorAdded) {
 					$this->template->head->javascript->append_file('/ckeditor/ckeditor.js');
 					$this->template->head->javascript->append_script('
 window.addEvent("domready", function() {
@@ -87,7 +90,21 @@ window.addEvent("domready", function() {
 	}
 });
 					');
-					break;
+					
+					$editorAdded = true;
+				}
+				
+				if($columnInfo['class'] = 'datetime' && !$datePickerAdded) {
+					$this->template->head->javascript->append_script('
+window.addEvent("domready", function() {
+	new DatePicker(".datetime", {
+		format: "m-d-Y",
+		pickerClass: "datepicker_dashboard"
+	});
+});
+					');
+					
+					$datePickerAdded = true;
 				}
 			}
 		}
@@ -145,7 +162,7 @@ window.addEvent("domready", function() {
 		$this->template->content = View::factory('view', array_merge($this->base_config, array(
 			'entries' => $result,
 			'columns' => $columnNames,
-			'relationships' => array_keys($this->relationships),
+			'relationships' => $this->crud->relationships,
 			'options' => $options,
 			'pages' => $pagination->render('digg')
 		)));
