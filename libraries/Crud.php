@@ -1,5 +1,7 @@
 <?php
 class Crud_Core extends FormGen_Core {
+	public $relationshipSearchFieldSuffix = '_search';
+	
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
 		
@@ -14,6 +16,7 @@ class Crud_Core extends FormGen_Core {
 		// add relationships to the column list, we have to generate content functions & attempt to guess default values
 		// note that relationships != checkbox / radio groups. The relationship functionality was built for database relationships
 		// the $name should be the relationship field in the source database (i.e. the study_category_id field's $name should be study_category)
+		
 		foreach($this->relationships as $name => $relationshipInfo) {
 			// the tricky label code strips out the commonality between a category listing & the relationship, ex:
 			//	news_item_categories
@@ -48,10 +51,22 @@ class Crud_Core extends FormGen_Core {
 				if($relationshipInfo['restrict'] != 'view') {
 					// this isn't a perfect method since there can be duplicate display_keys and then only one displays
 					
+					/*
 					$this->columns[$name.'_id'] = array(
 						'label' => $relationshipLabel,
 						'type' => 'select',
 						'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id'),
+						'restrict' => 'edit'
+					);
+					*/
+					
+					$this->columns[$name.'_id'] = array(
+						'label' => $relationshipLabel,
+						'type' => 'hidden'
+					);
+					
+					$this->columns[$name.$this->relationshipSearchFieldSuffix] = array(
+						'label' => $relationshipLabel,
 						'restrict' => 'edit'
 					);
 				}

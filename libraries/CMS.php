@@ -5,7 +5,6 @@ class CMS_Core extends Template_Controller {
 	public $controller_name;
 	public $base_config;
 	public $relationship_controllers;
-	public $autoAdjustRanking = false;
 	public $columns = array();
 	
 	/*
@@ -24,7 +23,7 @@ class CMS_Core extends Template_Controller {
 	protected $createDefaults = array();	// defaults to be copied over when an object is created
 	protected $editDefaults = array();		// default to be copied over when an object is edited
 	protected $autoRedirect = FALSE;		// auto redirect user, useful for if you don't want to write redirect code in your subclass
-	
+	public $autoAdjustRanking = false;
 	protected $crud;
 	
 	function __construct($file_path, $orm_name, $columns = array()) {
@@ -69,44 +68,71 @@ class CMS_Core extends Template_Controller {
 		if(Router::$method != 'view' && Router::$method != 'index') {
 			$editorAdded = false;
 			$datePickerAdded = false;
+			$domReadyJavascript = '';
 			
 			foreach($this->crud->columns as $columnName => $columnInfo) {
 				if($columnInfo['type'] == 'textarea' && !$editorAdded) {
 					$this->template->head->javascript->append_file('/ckeditor/ckeditor.js');
-					$this->template->head->javascript->append_script('
-window.addEvent("domready", function() {
-	var target = $$(".editor");
+					$domReadyJavascript .= '
+var target = $$(".editor");
 
-	if(target.length > 0) {
-		target = target[0];
-		
-		// remove the label
-		$$("label[for=\'" + target.getProperty("id") + "\']")[0].destroy();
-		
-		CKEDITOR.replace(target, {
-			//width:"730px",
-			height:"500px"
-		});
-	}
-});
-					');
+if(target.length > 0) {
+	target = target[0];
+	
+	// remove the label
+	$$("label[for=\'" + target.getProperty("id") + "\']")[0].destroy();
+	
+	CKEDITOR.replace(target, {
+		//width:"730px",
+		height:"500px"
+	});
+}
+					';
 					
 					$editorAdded = true;
 				}
 				
 				if($columnInfo['content'] == 'date' && !$datePickerAdded) {
-					$this->template->head->javascript->append_script('
-window.addEvent("domready", function() {
-	new DatePicker(".'.$columnInfo['class'].'", {
-		format: "'.Kohana::config('admin.date_format').'",
-		pickerClass: "datepicker_dashboard"
-	});
+					$domReadyJavascript .= '
+new DatePicker(".'.$columnInfo['class'].'", {
+	format: "'.Kohana::config('admin.date_format').'",
+	pickerClass: "datepicker_dashboard"
 });
-					');
+					';
 					
 					$datePickerAdded = true;
 				}
+				
+				if(strstr($columnName, $this->crud->relationshipSearchFieldSuffix) !== FALSE) {
+					// this auto-generates the JS code for a one-to-one relationship 
+					// CRUD generates two fields: base_name + '_id' & base_name + search field suffix
+					// base name is the name of the relationship without the '_id'
+					// the field with the suffix acts as the user visible field while the id of the element chosen is stored in the hidden field
+					// which is then copied into the ORM object when the edit action is being handled
+					// the search queries are handled by $this->search() and return a json object with two fields: display_name & id
+					
+					$baseColumnName = substr($columnName, 0, strlen($columnName) - strlen($this->crud->relationshipSearchFieldSuffix));
+					$domReadyJavascript .= "
+new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_url']."search/".$baseColumnName."', {
+	postVar: 'search',
+	selectMode: false,
+	minLength: 3,
+	injectChoice:function(token) {
+		var choice = new Element('li', {'html': this.markQueryValue(token['display_name'])});
+		choice.inputValue = token['display_name'];
+		choice.inputData = token;
+		this.addChoiceEvents(choice).inject(this.choices);
+	},
+	onSelection:function(element, selected, selection) {
+		$('{$baseColumnName}_id').set('value', selected.inputData['id']);
+	}
+});
+";
+				}
 			}
+			
+			if(!empty($domReadyJavascript))
+				$this->template->head->javascript->append_script('window.addEvent("domready", function() {'.$domReadyJavascript.'});');
 		}
 		
 		// setup some common defaults
@@ -215,6 +241,35 @@ window.addEvent("domready", function() {
 		} else {
 			message::error('Invalid ID', Kohana::config('admin.base').$this->controller_name);
 		}
+	}
+	
+	public function search($searchName) {
+		$this->auto_render = FALSE;
+		$post = $this->input->post();
+		$search = $post['search'];
+		
+		function implode_with_keys($sep, $array, $selection) {
+			$temp = array();
+			
+			foreach($selection as $key) {
+				if(isset($array[$key]))
+					$temp[] = $array[$key];
+			}
+			
+			return implode($sep, $temp);
+		}
+
+		$results = ORM::factory($searchName)->like($this->crud->relationships[$searchName]['display_key'], $search)->find_all();
+		$processedResults = array();
+
+		foreach($results as $result) {
+			$processedResults[] = array(
+				'display_name' => implode_with_keys(' ', (array) $result->as_array(), array('name', 'city', 'providence')),
+				'id' => $result->id
+			);
+		}
+		
+		echo json_encode($processedResults);
 	}
 	
 	// $group:		Elements in the rank group
