@@ -52,7 +52,7 @@ foreach($columns as $columnName => $columnInfo):
 			// try to map relationships to their actual name
 			$columnDisplayData = array_search($entry->$columnName, $columnInfo['values']);
 			if($columnDisplayData === FALSE) $columnDisplayData = "Node Error (".$entry->$columnName.")";
-		} else if(is_callable($columnInfo['content'])) {
+		} else if(is_callable($columnInfo['content']) && !in_array($columnInfo['content'], array('date', 'datetime'))) {
 			// if we have a custom content generator
 			$columnDisplayData = $columnInfo['content']($entry);
 		} else {

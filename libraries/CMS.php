@@ -94,11 +94,11 @@ window.addEvent("domready", function() {
 					$editorAdded = true;
 				}
 				
-				if($columnInfo['class'] = 'datetime' && !$datePickerAdded) {
+				if($columnInfo['content'] == 'date' && !$datePickerAdded) {
 					$this->template->head->javascript->append_script('
 window.addEvent("domready", function() {
-	new DatePicker(".datetime", {
-		format: "m-d-Y",
+	new DatePicker(".'.$columnInfo['class'].'", {
+		format: "'.Kohana::config('admin.date_format').'",
 		pickerClass: "datepicker_dashboard"
 	});
 });
