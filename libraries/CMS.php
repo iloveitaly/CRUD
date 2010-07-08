@@ -248,6 +248,10 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		$post = $this->input->post();
 		$search = $post['search'];
 		
+		if(empty($search) || empty($this->crud->relationships[$searchName])) {
+			exit(json_encode(array('display_name' => 'No Results Found', 'id' => '')));
+		}
+		
 		function implode_with_keys($sep, $array, $selection) {
 			$temp = array();
 			
@@ -264,7 +268,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 
 		foreach($results as $result) {
 			$processedResults[] = array(
-				'display_name' => implode_with_keys(' ', (array) $result->as_array(), array('name', 'city', 'providence')),
+				'display_name' => implode_with_keys(' ', (array) $result->as_array(), $this->crud->relationships[$searchName]['search_fields']),
 				'id' => $result->id
 			);
 		}

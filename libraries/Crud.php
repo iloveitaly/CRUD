@@ -33,8 +33,9 @@ class Crud_Core extends FormGen_Core {
 			// default type to multi (many-to-many)
 			// default restrict to none
 			
-			if(empty($relationshipInfo['type'])) $relationshipInfo['type'] = 'multi';
-			if(empty($relationshipInfo['restrict'])) $relationshipInfo['restrict'] = 'none';
+			if(empty($relationshipInfo['type'])) $relationshipInfo['type'] = 'multi';			// one or multi
+			if(empty($relationshipInfo['restrict'])) $relationshipInfo['restrict'] = 'none';	// view or edit
+			if(empty($relationshipInfo['selection'])) $relationshipInfo['selection'] ='html';	// html or ajax
 			
 			if($relationshipInfo['type'] == 'one') {
 				// for one-to-one we don't use a pivot table
@@ -51,24 +52,27 @@ class Crud_Core extends FormGen_Core {
 				if($relationshipInfo['restrict'] != 'view') {
 					// this isn't a perfect method since there can be duplicate display_keys and then only one displays
 					
-					/*
-					$this->columns[$name.'_id'] = array(
-						'label' => $relationshipLabel,
-						'type' => 'select',
-						'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id'),
-						'restrict' => 'edit'
-					);
-					*/
+					if($relationshipInfo['selection'] == 'html') {
+						$this->columns[$name.'_id'] = array(
+							'label' => $relationshipLabel,
+							'type' => 'select',
+							'values' => ORM::factory(inflector::singular($name))->select_list($relationshipInfo['display_key'], 'id'),
+							'restrict' => 'edit'
+						);
+					} else {
+						// configure ajax selection
 					
-					$this->columns[$name.'_id'] = array(
-						'label' => $relationshipLabel,
-						'type' => 'hidden'
-					);
+						$this->columns[$name.'_id'] = array(
+							'label' => $relationshipLabel,
+							'type' => 'hidden'
+						);
 					
-					$this->columns[$name.$this->relationshipSearchFieldSuffix] = array(
-						'label' => $relationshipLabel,
-						'restrict' => 'edit'
-					);
+						$this->columns[$name.$this->relationshipSearchFieldSuffix] = array(
+							'label' => $relationshipLabel,
+							'restrict' => 'edit',
+							'required' => 0
+						);
+					}
 				}
 			} else { // many
 				// for the view
