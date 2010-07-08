@@ -36,6 +36,7 @@ class Crud_Core extends FormGen_Core {
 			if(empty($relationshipInfo['type'])) $relationshipInfo['type'] = 'multi';			// one or multi
 			if(empty($relationshipInfo['restrict'])) $relationshipInfo['restrict'] = 'none';	// view or edit
 			if(empty($relationshipInfo['selection'])) $relationshipInfo['selection'] ='html';	// html or ajax
+			if(!isset($relationshipInfo['manage'])) $relationshipInfo['manage'] = true;
 			
 			if($relationshipInfo['type'] == 'one') {
 				// for one-to-one we don't use a pivot table
@@ -64,7 +65,8 @@ class Crud_Core extends FormGen_Core {
 					
 						$this->columns[$name.'_id'] = array(
 							'label' => $relationshipLabel,
-							'type' => 'hidden'
+							'type' => 'hidden',
+							'restrict' => 'edit'
 						);
 					
 						$this->columns[$name.$this->relationshipSearchFieldSuffix] = array(

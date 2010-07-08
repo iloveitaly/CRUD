@@ -16,7 +16,9 @@ $relationButtons = '';
 
 if(Kohana::config('admin.manage_relationships')) {
 	foreach($relationships as $relationshipName => $relationshipInfo) {
-		$relationButtons .= "&nbsp;&nbsp; <a href=\"".$action_url.$relationshipName."\">&raquo; Manage ".inflector::titlize($relationshipInfo['type'] == 'one' ? inflector::plural($relationshipName) : $relationshipName)."</a>";
+		if($relationshipInfo['manage']) {
+			$relationButtons .= "&nbsp;&nbsp; <a href=\"".$action_url.$relationshipName."\">&raquo; Manage ".inflector::titlize($relationshipInfo['type'] == 'one' ? inflector::plural($relationshipName) : $relationshipName)."</a>";
+		}
 	}
 }
 ?>

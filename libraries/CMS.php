@@ -96,7 +96,8 @@ if(target.length > 0) {
 					$domReadyJavascript .= '
 new DatePicker(".'.$columnInfo['class'].'", {
 	format: "'.Kohana::config('admin.date_format').'",
-	pickerClass: "datepicker_dashboard"
+	pickerClass: "datepicker_dashboard",
+	allowEmpty: true
 });
 					';
 					
@@ -246,10 +247,10 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	public function search($searchName) {
 		$this->auto_render = FALSE;
 		$post = $this->input->post();
-		$search = $post['search'];
+		$emptyMessage = array(array('display_name' => 'No Results Found', 'id' => ''));
 		
-		if(empty($search) || empty($this->crud->relationships[$searchName])) {
-			exit(json_encode(array('display_name' => 'No Results Found', 'id' => '')));
+		if(empty($post['search']) || empty($this->crud->relationships[$searchName])) {
+			exit(json_encode($emptyMessage));
 		}
 		
 		function implode_with_keys($sep, $array, $selection) {
@@ -262,7 +263,8 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			
 			return implode($sep, $temp);
 		}
-
+		
+		$search = $post['search'];
 		$results = ORM::factory($searchName)->like($this->crud->relationships[$searchName]['display_key'], $search)->find_all();
 		$processedResults = array();
 
@@ -273,7 +275,11 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			);
 		}
 		
-		echo json_encode($processedResults);
+		if(empty($processedResults)) {
+			echo json_encode($emptyMessage);
+		} else {
+			echo json_encode($processedResults);
+		}
 	}
 	
 	// $group:		Elements in the rank group
