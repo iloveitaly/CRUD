@@ -252,18 +252,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		if(empty($post['search']) || empty($this->crud->relationships[$searchName])) {
 			exit(json_encode($emptyMessage));
 		}
-		
-		function implode_with_keys($sep, $array, $selection) {
-			$temp = array();
-			
-			foreach($selection as $key) {
-				if(isset($array[$key]))
-					$temp[] = $array[$key];
-			}
-			
-			return implode($sep, $temp);
-		}
-		
+				
 		$search = $post['search'];
 		$results = ORM::factory($searchName)->like($this->crud->relationships[$searchName]['display_key'], $search)->find_all();
 		$processedResults = array();
@@ -323,6 +312,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			if(!isset($this->relationship_controllers[$method])) {
 				// then we have to create a relationship from the relationship entry
 				
+				// you can specify additional columns to display by adding a columns => array() to your relationship config
 				if(isset($this->relationships[$method]['columns'])) {
                     $additionalColumns = $this->relationships[$method]['columns'];
 				} else {

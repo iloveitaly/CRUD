@@ -15,6 +15,6 @@
 <fieldset>
 <?=isset($form_title) ? "<legend>".$form_title."</legend>" : ''?>
 <?=$fields?>
-<p align="center"><?=form::submit('submit_button', $submit_title)?></p>
+<p style="text-align:center"><?=form::submit('submit_button', $submit_title)?></p>
 </fieldset>
 <?=$form['close']?>

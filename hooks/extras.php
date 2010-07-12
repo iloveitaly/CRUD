@@ -25,4 +25,16 @@ function starts_with($check, $string) {
         return (strpos($string, $check) === 0) ? true : false;
     }
 }
+
+function implode_with_keys($sep, $array, $selection) {
+	$temp = array();
+	
+	foreach($selection as $key) {
+		if(isset($array[$key]))
+			$temp[] = $array[$key];
+	}
+	
+	return implode($sep, $temp);
+}
+
 ?>
