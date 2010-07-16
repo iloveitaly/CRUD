@@ -10,7 +10,7 @@ class Generate_Cms_Controller extends Controller {
 		$databaseEntries = Kohana::config('database');
 		
 		foreach($databaseEntries as $dbName => $dbConfig) {
-			echo "<h3>{$dbName}</h3>";
+			echo "<h3>Database: {$dbName}</h3>";
 			echo "<p><ul>";
 			$db = new Database($dbName);
 			
@@ -98,6 +98,7 @@ class Generate_Cms_Controller extends Controller {
 	
 	public function view() {
 		// parent::view(array('add', 'edit', 'delete'))
+		
 		parent::view();
 	}
 
@@ -124,7 +125,8 @@ EOL;
 				
 				continue;
 			}
-
+			
+			// check if we are a child of a one-to-many or one-to-one relationship
 			if(strstr($fieldName, '_id') !== FALSE) {
 				// then possibly a one to one relationship field
 				$relationshipTableName = inflector::plural(substr($fieldName, 0, -3));
@@ -133,7 +135,8 @@ EOL;
 				$relationshipFieldList[$relationshipTableName] = array(
 					'type' => 'one',
 					'columns' => $processedRelationshipFields,
-					'manage' => true
+					'manage' => true,
+					'display_key' => $this->findDisplayKey($relationshipTableName)
 				);
 
 				continue;
@@ -160,17 +163,39 @@ EOL;
 		
 		foreach($tableList as $otherTableName) {
 			if(strstr($otherTableName, '_'.$tableName) !== FALSE) {
+				// pivot tables are always structured as item_categories_items
+				
 				$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
+				
 				$processedFieldList[$fieldName] = array(
 					'type' => 'multi',
 					'manage' => true,
-					'columns' => $relationshipColumns
+					'columns' => $relationshipColumns,
+					'display_key' => $this->findDisplayKey($relationshipTableName)
 				);
 			}
 		}
 		
+		// note that we don't look for one-to-many relationships here
+		// only the child needs to have a one-relationship in the CMS to properly allow the user to edit one-to-many relationships
+		
 		return array($processedFieldList, $relationshipFieldList);
+	}
+	
+	protected function findDisplayKey($relationshipTable) {
+		$fallBack = '';
+		
+		foreach($this->db->list_fields($relationshipTable) as $fieldName => $fieldInfo) {
+			if($fieldInfo['type'] == 'string') {
+				$fallBack = $fieldName;
+			}
+			
+			if(strstr($fieldName, 'name') !== FALSE || strstr($fieldName, 'title') !== FALSE)
+				return $fieldName;
+		}
+		
+		return $fallBack;
 	}
 	
 	protected function formatPHP($arrayRep) {
