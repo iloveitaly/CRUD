@@ -133,7 +133,7 @@ class Crud_Core extends FormGen_Core {
 			$page = ORM::factory($this->orm_name, (int) $id);
 		}
 		
-		if($this->process(&$page)) {			
+		if($this->process($page)) {			
 			return array('mode' => $mode, 'data' => $page);
 		} else {
 			// you overide this title by accessing $this->template->content->submit_title in the subclass
