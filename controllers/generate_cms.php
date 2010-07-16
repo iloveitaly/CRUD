@@ -25,9 +25,7 @@ class Generate_Cms_Controller extends Controller {
 	public function model($dbName, $table) {
 		$this->db = new Database($dbName);
 		$tableList = $this->db->list_tables();
-		
-		header("Content-Type: text/plain");
-		
+				
 		$ormName = inflector::singular($table);
 		$controllerName = str_replace(' ', '_', ucwords(str_replace('_', ' ', $ormName)));
 		
@@ -69,30 +67,28 @@ class Generate_Cms_Controller extends Controller {
 	public function controller($dbName, $table) {
 		$this->db = new Database($dbName);
 		$tableList = $this->db->list_tables();
-		
-		header("Content-Type: text/plain");
-		
-		echo "<?php\n";
+				
+		$outputContent = "<?php\n";
 		
 		// generate the class name
 		$controllerName = str_replace(' ', '_', ucwords(str_replace('_', ' ', $table)));
-		echo "class {$controllerName}_Controller extends CMS_Core {\n\n";
+		$outputContent .= "class {$controllerName}_Controller extends CMS_Core {\n\n";
 		
 		// generate the basic fields
 		list($processedFieldList, $relationshipFieldList) = $this->generateColumnList($table);
 		
-		echo "\tprotected \$columns = ";
-		echo $this->formatPHP(var_export($processedFieldList, true));
-		echo ";\n";
+		$outputContent .= "\tprotected \$columns = ";
+		$outputContent .= $this->formatPHP(var_export($processedFieldList, true));
+		$outputContent .= ";\n";
 		
 		// generation the relationships
-		echo "\t\n\tprotected \$relationships = ";
-		echo $this->formatPHP(var_export($relationshipFieldList, true));
-		echo ";\n";
+		$outputContent .= "\t\n\tprotected \$relationships = ";
+		$outputContent .= $this->formatPHP(var_export($relationshipFieldList, true));
+		$outputContent .= ";\n";
 		
 		// generate basic function wireframe
 		$ormName = inflector::singular($table);
-		echo <<<EOL
+		$outputContent .= <<<EOL
 	
 	function __construct() {
 		parent::__construct(__FILE__, '{$ormName}');
@@ -101,12 +97,15 @@ class Generate_Cms_Controller extends Controller {
 	}
 	
 	public function view() {
+		// parent::view(array('add', 'edit', 'delete'))
 		parent::view();
 	}
 
 EOL;
 		
-		echo "}\n?>\n";
+		$outputContent .= "}\n?>\n";
+		
+		download::force(strtolower($controllerName).'.php', $outputContent);
 	}
 	
 	protected function generateColumnList($tableName, $relationshipTable = false) {
@@ -133,7 +132,8 @@ EOL;
 				
 				$relationshipFieldList[$relationshipTableName] = array(
 					'type' => 'one',
-					'columns' => $processedRelationshipFields
+					'columns' => $processedRelationshipFields,
+					'manage' => true
 				);
 
 				continue;
@@ -164,6 +164,7 @@ EOL;
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
 				$processedFieldList[$fieldName] = array(
 					'type' => 'multi',
+					'manage' => true,
 					'columns' => $relationshipColumns
 				);
 			}
