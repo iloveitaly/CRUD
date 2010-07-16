@@ -77,12 +77,12 @@ class Generate_Cms_Controller extends Controller {
 		// generate the basic fields
 		list($processedFieldList, $relationshipFieldList) = $this->generateColumnList($table);
 		
-		$outputContent .= "\tprotected \$columns = ";
+		$outputContent .= "\tpublic \$columns = ";
 		$outputContent .= $this->formatPHP(var_export($processedFieldList, true));
 		$outputContent .= ";\n";
 		
 		// generation the relationships
-		$outputContent .= "\t\n\tprotected \$relationships = ";
+		$outputContent .= "\t\n\tpublic \$relationships = ";
 		$outputContent .= $this->formatPHP(var_export($relationshipFieldList, true));
 		$outputContent .= ";\n";
 		
@@ -132,7 +132,7 @@ EOL;
 				$relationshipTableName = inflector::plural(substr($fieldName, 0, -3));
 				list($processedRelationshipFields) = $this->generateColumnList($relationshipTableName, true);
 				
-				$relationshipFieldList[$relationshipTableName] = array(
+				$relationshipFieldList[inflector::singular($relationshipTableName)] = array(
 					'type' => 'one',
 					'columns' => $processedRelationshipFields,
 					'manage' => true,
