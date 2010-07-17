@@ -1,7 +1,5 @@
 <?
 
-// most of these functions are also stored on: http://snipplr.com/users/iloveitaly/
-
 function array_add_value_suffix($array, $suffix) {
 	foreach($array as $key => $value) {
 		$array[$key] = $value.$suffix;

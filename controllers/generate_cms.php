@@ -52,7 +52,7 @@ class Generate_Cms_Controller extends Controller {
 		
 		foreach($tableList as $tableName) {
 			if(array_search($ormName.'_id', array_keys($this->db->list_fields($tableName))) !== FALSE) {
-				$hasMany[] = "'".inflector::singular($tableName)."'";
+				$hasMany[] = "'".$tableName."'";
 			}
 		}
 		
@@ -91,6 +91,11 @@ class Generate_Cms_Controller extends Controller {
 		$outputContent .= <<<EOL
 	
 	function __construct() {
+		// how to add a file picker:
+		// \$availableThumbs = listdir(DOCROOT.normalize_path(Kohana::config('folder.download_thumbnails'), FALSE), array('jpg', 'jpeg', 'png'));
+		// \$this->columns['thumbnail']['values'] = array_from_keys_values(\$availableThumbs, \$availableThumbs);
+		// \$this->columns['thumbnail']['type'] = 'select';
+		
 		parent::__construct(__FILE__, '{$ormName}');
 		
 		\$this->autoRedirect = TRUE;
