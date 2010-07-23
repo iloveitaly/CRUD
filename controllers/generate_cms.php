@@ -101,11 +101,33 @@ class Generate_Cms_Controller extends Controller {
 		\$this->autoRedirect = TRUE;
 	}
 	
+	/*
 	public function view() {
 		// parent::view(array('add', 'edit', 'delete'))
-		
-		parent::view();
 	}
+	*/
+	
+	/*
+	public function edit(\$id = null) {
+		// if \$result is true then we are creating or editing a object
+		\$result = parent::edit(\$id);
+		
+		if(\$result) {
+			\$mode = \$result['mode'];
+			\$page = \$result['data'];
+			
+			if(\$mode == "create") {
+				\$page->date_created = \$page->date_modified = time();
+			} else {
+				\$page->date_modified = time();
+			}
+			
+			\$page->save();
+			
+			message::info('Object '.(\$mode == "edit" ? 'Edited' : 'Created').' Successfully.', Kohana::config('admin.base').\$this->controller_name.'/view');
+		}
+    }
+	*/
 
 EOL;
 		
