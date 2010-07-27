@@ -221,9 +221,12 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 				}
 			}
 			
-			if($result['mode'] == 'edit') {
-				if($this->autoAdjustRanking && isset($this->columns['rank'])) {
-					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $page);
+			if($this->autoAdjustRanking && isset($this->columns['rank'])) {
+				if($result['mode'] == 'edit') {
+					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $result['data']);
+				} else {
+					$max = (int) ORM::factory($this->orm_name)->select('MAX(rank) as max')->orderby('rank' ,'DESC')->find()->max + 1;					
+					$result['data']->rank = $max;
 				}
 			}
 			
@@ -238,9 +241,9 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 
 	public function delete($id = null) {
 		if($this->crud->delete($id)) {
-			message::info(inflector::titlize($this->controller_name).' Successfully Deleted', Kohana::config('admin.base').$this->controller_name);
+			message::info(inflector::titlize($this->controller_name).' Successfully Deleted', $this->base_config['action_url']);
 		} else {
-			message::error('Invalid ID', Kohana::config('admin.base').$this->controller_name);
+			message::error('Invalid ID', $this->base_config['action_url']);
 		}
 	}
 	
@@ -327,7 +330,11 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 					$this->relationships[$method]['display_key'] => array()
 				), $additionalColumns));
 				
+				// define auto_adjust_ranking in the relationship field to set the value for the relationship controller
+				// otherwise the value will be inherited from the parent controller
+				
 				$controller->autoRedirect = TRUE;
+				$controller->autoAdjustRanking = isset($this->relationships[$method]['auto_adjust_ranking']) ? $this->relationships[$method]['auto_adjust_ranking'] : $this->autoAdjustRanking;
 				$controller->base_config['action_url'] = Kohana::config('admin.base').$this->controller_name.'/'.$method.'/';
 				
 				$methodName = array_shift($arguments);

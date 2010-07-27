@@ -1,5 +1,7 @@
 <?
 class Generate_Cms_Controller extends Controller {
+	const ALLOW_PRODUCTION = FALSE;
+	
 	public function __construct() {
 		parent::__construct();
 	}
@@ -99,6 +101,7 @@ class Generate_Cms_Controller extends Controller {
 		parent::__construct(__FILE__, '{$ormName}');
 		
 		\$this->autoRedirect = TRUE;
+		\$this->autoAdjustRanking = TRUE;
 	}
 	
 	/*
@@ -143,6 +146,7 @@ EOL;
 		$relationshipFieldList = array();
 		
 		foreach($fieldList as $fieldName => $fieldInfo) {
+			// catch the primary ID field and restrict it to view
 			if($fieldName == 'id') {
 				if($relationshipTable) continue;
 				
@@ -163,13 +167,16 @@ EOL;
 					'type' => 'one',
 					'columns' => $processedRelationshipFields,
 					'manage' => true,
-					'display_key' => $this->findDisplayKey($relationshipTableName)
+					'display_key' => $this->findDisplayKey($relationshipTableName),
+					'auto_adjust_ranking' => true
 				);
 
 				continue;
 			}
 			
 			$processedFieldList[$fieldName] = array();
+			
+			// handle special cases
 			
 			if($fieldInfo['type'] == 'int' && strstr($fieldName, 'date') !== FALSE) {
 				// then we have an integer based date storage field
@@ -179,6 +186,9 @@ EOL;
 			} else if($fieldInfo['type'] == 'string' && strstr($fieldName, 'description') !== FALSE) {
 				// this is convention, description fields normally require a textarea element in the admin
 				$processedFieldList[$fieldName]['type'] = 'textarea';
+			} else if($fieldInfo['type'] == 'int' && strstr($fieldName, 'rank') !== FALSE) {
+				// rank is not required since in most cases it is auto generated
+				$processedFieldList[$fieldName]['required'] = false;
 			}
 			
 			// print_r($fieldInfo);
@@ -199,7 +209,8 @@ EOL;
 					'type' => 'multi',
 					'manage' => true,
 					'columns' => $relationshipColumns,
-					'display_key' => $this->findDisplayKey($relationshipTableName)
+					'display_key' => $this->findDisplayKey($relationshipTableName),
+					'auto_adjust_ranking' => true
 				);
 			}
 		}
