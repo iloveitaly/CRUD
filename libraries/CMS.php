@@ -26,7 +26,7 @@ class CMS_Core extends Template_Controller {
 	public $autoAdjustRanking = false;
 	protected $crud;
 	
-	function __construct($file_path, $orm_name, $columns = array()) {
+	function __construct($file_path, $orm_name, $columns = array(), $relationships = array()) {
 		parent::__construct();
 
 		$this->relationship_controllers = array();
@@ -55,10 +55,14 @@ class CMS_Core extends Template_Controller {
 		$this->template->head->css->append_file(Kohana::config('admin.css'));
 		$this->template->head->title->set(Kohana::config('admin.title').$this->base_config['title']);
 		
-		// allow the columns to be passed as an argument
+		// allow the columns & relationships to be passed as an argument
+		
 		if(count($columns) > 0)
 			$this->columns = $columns;
 		
+		if(count($relationships) > 0)
+			$this->relationships = $relationships;
+			
 		// setup crud assistant
 		$this->crud = new Crud($this);
 		
@@ -316,19 +320,11 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 				// then we have to create a relationship from the relationship entry
 				
 				// you can specify additional columns to display by adding a columns => array() to your relationship config
-				if(isset($this->relationships[$method]['columns'])) {
-                    $additionalColumns = $this->relationships[$method]['columns'];
-				} else {
-                    $additionalColumns = array();
-				}
+				$columns = isset(isset($this->relationships[$method]['columns'])) ? $this->relationships[$method]['columns'] : array();
+				$columns += array('id' => array('restrict' => 'view'), $this->relationships[$method]['display_key'] => array());
+				$relationships = isset($this->relationships[$method]['relationships']) ? $this->relationships[$method]['relationships'] : array();
 				
-				$controller = new CMS_Core($method, inflector::singular($method), array_merge(array(
-					// column names
-					'id' => array(
-						'restrict' => 'view'
-					),
-					$this->relationships[$method]['display_key'] => array()
-				), $additionalColumns));
+				$controller = new CMS_Core($method, inflector::singular($method), $columns, $relationships);
 				
 				// define auto_adjust_ranking in the relationship field to set the value for the relationship controller
 				// otherwise the value will be inherited from the parent controller
