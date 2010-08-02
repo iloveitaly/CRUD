@@ -17,7 +17,7 @@ class Generate_Cms_Controller extends Controller {
 			$db = new Database($dbName);
 			
 			foreach($db->list_tables() as $tableName) {
-				echo "<li>{$tableName}: <a href='".url::current()."/../controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current()."/../model/{$dbName}/{$tableName}'>Model</a></li>";
+				echo "<li>{$tableName}: <a href='".url::current(TRUE)."/controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current()."/../model/{$dbName}/{$tableName}'>Model</a></li>";
 			}
 			
 			echo "</p></ul>";
@@ -168,7 +168,9 @@ EOL;
 					'columns' => $processedRelationshipFields,
 					'manage' => true,
 					'display_key' => $this->findDisplayKey($relationshipTableName),
-					'auto_adjust_ranking' => true
+					'auto_adjust_ranking' => true,
+					'selection' => 'ajax',
+					'search_fields' => array()
 				);
 
 				continue;
