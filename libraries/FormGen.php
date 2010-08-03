@@ -15,6 +15,8 @@ class FormGen_Core extends Controller {
 	public $form_class = 'hform';
 	public $form_action = '';			// auto set in the constructor, specify if using in a non CMS solution
 	public $form_name = '';				// if form_name isn't set then the orn_name is used for the <form name>
+	public $form_style = '';
+	
 	public $fields_template = 'fields';	// template to use for field generation
 	public $edit_template = 'form';
 	public $view_template = 'view';
@@ -52,6 +54,9 @@ class FormGen_Core extends Controller {
 	public function generate_email_message() {
 		$post = $this->input->post();
 		$message = '';
+		
+		// this could be a bit more advanced: question --> answer inflections, i.e.:
+		// How many people at parish? --> People at parish:
 		
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
@@ -91,7 +96,8 @@ class FormGen_Core extends Controller {
 		$this->filteredColumns = array();
 		$this->form = Formo::factory($this->form_name ? $this->form_name : $this->orm_name)
 			->set('action', $this->form_action)
-			->set('_class', $this->form_class);
+			->set('style', $this->form_style)
+			->set('class', $this->form_class);
 		
 		// looks like formo strtolowers the $columnName
 		// this means that your dbs must use field_name instead of FieldName or you will get an undefined index error

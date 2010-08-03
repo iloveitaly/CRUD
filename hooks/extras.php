@@ -1,7 +1,5 @@
 <?
 
-// most of these functions are also stored on: http://snipplr.com/users/iloveitaly/
-
 function array_add_value_suffix($array, $suffix) {
 	foreach($array as $key => $value) {
 		$array[$key] = $value.$suffix;
@@ -25,4 +23,16 @@ function starts_with($check, $string) {
         return (strpos($string, $check) === 0) ? true : false;
     }
 }
+
+function implode_with_keys($sep, $array, $selection) {
+	$temp = array();
+	
+	foreach($selection as $key) {
+		if(isset($array[$key]))
+			$temp[] = $array[$key];
+	}
+	
+	return implode($sep, $temp);
+}
+
 ?>

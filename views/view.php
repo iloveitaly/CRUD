@@ -15,8 +15,10 @@ $addButton = array_search('add', $options) !== FALSE ? "<a href=\"{$action_url}e
 $relationButtons = '';
 
 if(Kohana::config('admin.manage_relationships')) {
-	foreach($relationships as $relationshipName) {
-		$relationButtons .= "&nbsp;&nbsp; <a href=\"".$action_url.$relationshipName."\">&raquo; Manage ".inflector::titlize($relationshipName)."</a>";
+	foreach($relationships as $relationshipName => $relationshipInfo) {
+		if($relationshipInfo['manage']) {
+			$relationButtons .= "&nbsp;&nbsp; <a href=\"".$action_url.$relationshipName."\">&raquo; Manage ".inflector::titlize($relationshipInfo['type'] == 'one' ? inflector::plural($relationshipName) : $relationshipName)."</a>";
+		}
 	}
 }
 ?>
@@ -55,7 +57,7 @@ foreach($columns as $columnName => $columnInfo):
 			// try to map relationships to their actual name
 			$columnDisplayData = array_search($entry->$columnName, $columnInfo['values']);
 			if($columnDisplayData === FALSE) $columnDisplayData = "Node Error (".$entry->$columnName.")";
-		} else if(is_callable($columnInfo['content'])) {
+		} else if(is_callable($columnInfo['content']) && !in_array($columnInfo['content'], array('date', 'datetime'))) {
 			// if we have a custom content generator
 			$columnDisplayData = $columnInfo['content']($entry);
 		} else {
