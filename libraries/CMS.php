@@ -109,7 +109,7 @@ window.addEvent("domready", function() {
 		$rpp = Kohana::config('admin.rpp');
 		
 		// two sorting keys: s => sort key, d => sort direction
-		$query = input::instance()->get();
+		$query = $this->input->get();
 		
 		if(isset($query['s']) && isset($query['d'])) {
 			$orderField = $query['s'];

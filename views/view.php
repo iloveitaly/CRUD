@@ -33,8 +33,11 @@ if(Kohana::config('admin.manage_relationships')) {
 foreach($columns as $columnName => $columnInfo):
 	// if 'content' contains function then it is a custom content transformer
 	
-	if(is_callable($columnInfo['content'])) $sortString = '';
-	else $sortString = '?'.url::get_query_string(array('s' => $columnName, 'd' => isset($get['s']) && $get['d'] == 'a' ? 'd' : 'a'));
+	if(is_callable($columnInfo['content']) && $columnInfo['type'] == 'custom') {
+		$sortString = '';
+	} else {
+		$sortString = '?'.url::get_query_string(array('s' => $columnName, 'd' => isset($get['s']) && $get['d'] == 'a' ? 'd' : 'a'));
+	}
 	
 	if(isset($columnInfo['label'])) $headerTitle = $columnInfo['label'];
 	else $headerTitle = inflector::titlize($columnName);
