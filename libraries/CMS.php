@@ -321,8 +321,8 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 				// then we have to create a relationship from the relationship entry
 				
 				// you can specify additional columns to display by adding a columns => array() to your relationship config
-				$columns = isset($this->relationships[$method]['columns']) ? $this->relationships[$method]['columns'] : array();
-				$columns += array('id' => array('restrict' => 'view'), $this->relationships[$method]['display_key'] => array());
+				$columns = array('id' => array('restrict' => 'view'), $this->relationships[$method]['display_key'] => array());
+				$columns += isset($this->relationships[$method]['columns']) ? $this->relationships[$method]['columns'] : array();
 				$relationships = isset($this->relationships[$method]['relationships']) ? $this->relationships[$method]['relationships'] : array();
 				
 				$controller = new CMS_Core($method, inflector::singular($method), $columns, $relationships);
