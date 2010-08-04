@@ -237,7 +237,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			
 			if($this->autoRedirect) {
 				$result['data']->save();
-				message::info(inflector::titlize($this->controller_name).' Created', $this->base_config['action_url']);
+				message::info(inflector::titlize($this->controller_name).' '.ucwords($result['mode']).'ed', $this->base_config['action_url']);
 			}
 
 			return $result;
