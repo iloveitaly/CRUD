@@ -122,6 +122,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	postVar: 'search',
 	selectMode: false,
 	minLength: 3,
+	width: 'auto',
 	injectChoice:function(token) {
 		var choice = new Element('li', {'html': this.markQueryValue(token['display_name'])});
 		choice.inputValue = token['display_name'];
