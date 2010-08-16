@@ -54,7 +54,7 @@ class FormGen_Core extends Controller {
 	public function generate_email_message() {
 		$post = $this->input->post();
 		$message = '';
-		
+
 		// this could be a bit more advanced: question --> answer inflections, i.e.:
 		// How many people at parish? --> People at parish:
 		
@@ -62,21 +62,19 @@ class FormGen_Core extends Controller {
 			if($columnInfo['restrict'] == 'view') continue;
 			
 			// if you want to hide a custom element from the email generation set restrict = view
-			if($columnInfo['type'] != 'custom')
-				$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']).": ";
+			if($columnInfo['type'] != 'custom') {
+				$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']);
+				$message .= $message[strlen($message) - 1] != ':' ? ': ' : ' ';
+			}
 			
 			switch($columnInfo['type']) {
 				case 'checkbox':
 					// if we are processing a checkbox they could select multiple options
 					// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
 				
-					$convertedList = array();
-					foreach($post[$columnName] as $key) {
-						// we strip tags here b/c it is possible to embed sub fields within the text of a checkbox label
-						$convertedList[] = strip_tags($this->columns[$columnName]['values'][$key]);
-					}
-				
+					$convertedList = array_values($this->form->$columnName->value);
 					$message.= implode(', ', $convertedList)."\n";
+					
 					break;
 				case 'custom':
 					$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
