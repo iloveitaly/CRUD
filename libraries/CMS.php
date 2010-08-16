@@ -26,7 +26,7 @@ class CMS_Core extends Template_Controller {
 	public $autoAdjustRanking = false;
 	protected $crud;
 	
-	function __construct($file_path, $orm_name, $columns = array()) {
+	function __construct($file_path, $orm_name, $columns = array(), $relationships = array()) {
 		parent::__construct();
 
 		$this->relationship_controllers = array();
@@ -55,10 +55,14 @@ class CMS_Core extends Template_Controller {
 		$this->template->head->css->append_file(Kohana::config('admin.css'));
 		$this->template->head->title->set(Kohana::config('admin.title').$this->base_config['title']);
 		
-		// allow the columns to be passed as an argument
+		// allow the columns & relationships to be passed as an argument
+		
 		if(count($columns) > 0)
 			$this->columns = $columns;
 		
+		if(count($relationships) > 0)
+			$this->relationships = $relationships;
+			
 		// setup crud assistant
 		$this->crud = new Crud($this);
 		
@@ -118,6 +122,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	postVar: 'search',
 	selectMode: false,
 	minLength: 3,
+	width: 'auto',
 	injectChoice:function(token) {
 		var choice = new Element('li', {'html': this.markQueryValue(token['display_name'])});
 		choice.inputValue = token['display_name'];
@@ -153,7 +158,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		$rpp = Kohana::config('pagination.default.items_per_page');
 		
 		// two sorting keys: s => sort key, d => sort direction
-		$query = input::instance()->get();
+		$query = $this->input->get();
 		
 		if(isset($query['s']) && isset($query['d'])) {
 			$orderField = $query['s'];
@@ -221,15 +226,18 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 				}
 			}
 			
-			if($result['mode'] == 'edit') {
-				if($this->autoAdjustRanking && isset($this->columns['rank'])) {
-					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $page);
+			if($this->autoAdjustRanking && isset($this->columns['rank'])) {
+				if($result['mode'] == 'edit') {
+					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $result['data']);
+				} else {
+					$max = (int) ORM::factory($this->orm_name)->select('MAX(rank) as max')->orderby('rank' ,'DESC')->find()->max + 1;					
+					$result['data']->rank = $max;
 				}
 			}
 			
 			if($this->autoRedirect) {
 				$result['data']->save();
-				message::info(inflector::titlize($this->controller_name).' Created', $this->base_config['action_url']);
+				message::info(inflector::titlize(inflector::singular($this->controller_name)).' '.ucwords($result['mode']).'ed', $this->base_config['action_url']);
 			}
 
 			return $result;
@@ -238,9 +246,9 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 
 	public function delete($id = null) {
 		if($this->crud->delete($id)) {
-			message::info(inflector::titlize($this->controller_name).' Successfully Deleted', Kohana::config('admin.base').$this->controller_name);
+			message::info(inflector::titlize($this->controller_name).' Successfully Deleted', $this->base_config['action_url']);
 		} else {
-			message::error('Invalid ID', Kohana::config('admin.base').$this->controller_name);
+			message::error('Invalid ID', $this->base_config['action_url']);
 		}
 	}
 	
@@ -313,21 +321,17 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 				// then we have to create a relationship from the relationship entry
 				
 				// you can specify additional columns to display by adding a columns => array() to your relationship config
-				if(isset($this->relationships[$method]['columns'])) {
-                    $additionalColumns = $this->relationships[$method]['columns'];
-				} else {
-                    $additionalColumns = array();
-				}
+				$columns = array('id' => array('restrict' => 'view'), $this->relationships[$method]['display_key'] => array());
+				$columns += isset($this->relationships[$method]['columns']) ? $this->relationships[$method]['columns'] : array();
+				$relationships = isset($this->relationships[$method]['relationships']) ? $this->relationships[$method]['relationships'] : array();
 				
-				$controller = new CMS_Core($method, inflector::singular($method), array_merge(array(
-					// column names
-					'id' => array(
-						'restrict' => 'view'
-					),
-					$this->relationships[$method]['display_key'] => array()
-				), $additionalColumns));
+				$controller = new CMS_Core($method, inflector::singular($method), $columns, $relationships);
+				
+				// define auto_adjust_ranking in the relationship field to set the value for the relationship controller
+				// otherwise the value will be inherited from the parent controller
 				
 				$controller->autoRedirect = TRUE;
+				$controller->autoAdjustRanking = isset($this->relationships[$method]['auto_adjust_ranking']) ? $this->relationships[$method]['auto_adjust_ranking'] : $this->autoAdjustRanking;
 				$controller->base_config['action_url'] = Kohana::config('admin.base').$this->controller_name.'/'.$method.'/';
 				
 				$methodName = array_shift($arguments);
