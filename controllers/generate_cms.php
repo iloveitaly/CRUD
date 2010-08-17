@@ -17,7 +17,7 @@ class Generate_Cms_Controller extends Controller {
 			$db = new Database($dbName);
 			
 			foreach($db->list_tables() as $tableName) {
-				echo "<li>{$tableName}: <a href='".url::current(TRUE)."/controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current()."/../model/{$dbName}/{$tableName}'>Model</a></li>";
+				echo "<li>{$tableName}: <a href='".url::current(TRUE)."/controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current(TRUE)."/model/{$dbName}/{$tableName}'>Model</a></li>";
 			}
 			
 			echo "</p></ul>";
@@ -94,9 +94,7 @@ class Generate_Cms_Controller extends Controller {
 	
 	function __construct() {
 		// how to add a file picker:
-		// \$availableThumbs = listdir(DOCROOT.normalize_path(Kohana::config('folder.download_thumbnails'), FALSE), array('jpg', 'jpeg', 'png'));
-		// \$this->columns['thumbnail']['values'] = array_from_keys_values(\$availableThumbs, \$availableThumbs);
-		// \$this->columns['thumbnail']['type'] = 'select';
+		// \$this->createFilePicker('thumbnail', '/path/to/folder', array('jpg', 'jpeg', 'png'))
 		
 		parent::__construct(__FILE__, '{$ormName}');
 		
