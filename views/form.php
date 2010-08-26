@@ -3,12 +3,24 @@
 // optional: $form_title, 
 ?>
 <?if(count($errors)):?>
+<div class='error'>
 <b>Submitted Information Has Errors:</b>
-<ul>
+<ul style="margin-bottom:0;">
 <?foreach($errors as $key => $value):?>
-	<li><b><?=isset($form[$key]->label) ? $form[$key]->label : inflector::titlize($key)?>:</b> <?=$value?></li>
+	<li><b>
+<?
+// although more messy than I would like this prevents two punctuation marks (i.e. ?: or .:) from appearing in the error box
+$fieldDisplayName = isset($form[$key]->label) ? $form[$key]->label : inflector::titlize($key);
+
+if(ctype_punct($fieldDisplayName[strlen($fieldDisplayName) - 1])) {
+	echo substr($fieldDisplayName, 0, strlen($fieldDisplayName) - 1);
+} else {
+	echo $fieldDisplayName;
+}
+?>:</b> <?=$value?></li>
 <?endforeach;?>
 </ul>
+</div>
 <?endif;?>
 
 <?=$form['open']?>
