@@ -4,8 +4,9 @@ class CMS_Core extends Template_Controller {
 	
 	public $controller_name;
 	public $base_config;
-	public $relationship_controllers;
 	public $columns = array();
+	public $relationship_controllers;
+	protected $filePickerList = array();
 	
 	/*
 		Relationships define a many to many relationship
@@ -22,14 +23,18 @@ class CMS_Core extends Template_Controller {
 	
 	protected $createDefaults = array();	// defaults to be copied over when an object is created
 	protected $editDefaults = array();		// default to be copied over when an object is edited
+	
+	// options
 	protected $autoRedirect = FALSE;		// auto redirect user, useful for if you don't want to write redirect code in your subclass
 	public $autoAdjustRanking = false;
+	
 	protected $crud;
 	
 	function __construct($file_path, $orm_name, $columns = array(), $relationships = array()) {
 		parent::__construct();
 
 		$this->relationship_controllers = array();
+		
 		$this->orm_name = $orm_name;
 		$this->controller_name = basename($file_path, '.php');	// the $file_path passed should be __FILE__ of the subclass. You can also simply pass the controller name
 		$this->base_config = array(
@@ -210,8 +215,14 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		
 		if($result['mode'] == 'view') {
 			$this->template->content = new View('edit', array_merge($this->base_config, array(
-			    'page_title' => ($id != null ? 'Edit ' : 'Create ').$this->base_config['title']
+			    'page_title' => ($id != null ? 'Edit ' : 'Create ').$this->base_config['title'],
+				'info' => ''	// we include a empty string here to elminate errors when appending strings onto the info variable
 			)));
+
+			// create some help text for each of the file pickers
+			foreach($this->filePickerList as $columnName => $pickerDirectory) {
+				$this->template->content->info .= '<p>Files for  \''.(isset($this->columns[$columnName]['label']) ? $this->columns[$columnName]['label'] : inflector::titlize($columnName)).'\' are located in <b>'.$pickerDirectory.'</b></p>';
+			}
 			
 			$this->template->content->form = $result['data'];
 			
@@ -312,6 +323,8 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	}
 	
 	protected function createFilePicker($columnName, $directoryPath, $allowedFiles = array('jpg', 'jpeg', 'png')) {
+		$this->filePickerList[$columnName] = $directoryPath;
+
 		// check to make sure the target directory exists
 		// note that the directory path should be relative to the domain / public folder
 		
