@@ -1,6 +1,7 @@
 <?php
 class Crud_Core extends FormGen_Core {
 	public $relationshipSearchFieldSuffix = '_search';
+	public $relationshipViewFieldSuffix = '_id_v';
 	
 	function __construct($data_holder) {
 		parent::__construct($data_holder);
@@ -43,7 +44,7 @@ class Crud_Core extends FormGen_Core {
 				// convention is to use: singular_table_id
 				
 				// _v = view field
-				$this->columns[$name.'_id_v'] = array(
+				$this->columns[$name.$this->relationshipViewFieldSuffix] = array(
 					'label' => $relationshipLabel,
 					'type' => 'custom',
 					'content' => create_function('$ob', 'return ORM::factory("'.inflector::singular($name).'", $ob->'.$name.'_id)->'.$relationshipInfo['display_key'].';'),
@@ -82,6 +83,7 @@ class Crud_Core extends FormGen_Core {
 				$this->columns[$name] = array(
 					'restrict' => 'view',
 					'label' => $relationshipLabel,
+					'type' => 'custom',
 					'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')
 				);
 						
