@@ -151,14 +151,13 @@ class Crud_Core extends FormGen_Core {
 			}
 			
 			// handle ajax one-to-one relationship value display 
-			
 			foreach($this->relationships as $name => $relationshipInfo) {
 				if($relationshipInfo['restrict'] != 'view' && $relationshipInfo['selection'] == 'ajax') {
 					$relationshipDisplayFieldName = $name.$this->relationshipSearchFieldSuffix;
 					$relationshipIDColumn = $name.'_id';
 					
 					// to generate the display value we implode the selected search keys
-					$this->form->$relationshipDisplayFieldName->value = implode_with_keys(' ', (array) ORM::factory($name, $page->$relationshipIDColumn)->as_array(), $relationshipInfo['search_fields']);
+					$this->form->$relationshipDisplayFieldName->value = implode_with_keys(' ', (array) ORM::factory($name, $this->form->$relationshipIDColumn->value)->as_array(), $relationshipInfo['search_fields']);
 				}
 			}
 			
