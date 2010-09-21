@@ -35,4 +35,19 @@ function implode_with_keys($sep, $array, $selection) {
 	return implode($sep, $temp);
 }
 
+function create_path($targetPath) {
+	$targetClimber = $targetPath;
+	
+	while(!file_exists($targetPath)) {			
+		// if the 'climber' exists then reset to the top of the directory and drill down until we find a directory that doesn't exist
+		if(file_exists($targetClimber)) {
+			$targetClimber = $targetPath;
+		} else if(file_exists(dirname($targetClimber))) {
+			mkdir($targetClimber, 0775);
+		} else {
+			$targetClimber = dirname($targetClimber);
+		}
+	}
+}
+
 ?>
