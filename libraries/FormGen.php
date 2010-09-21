@@ -144,9 +144,8 @@ class FormGen_Core extends Controller {
 				
 				if($this->filteredColumns[$columnName]['type'] == 'file') {
 					// use uploaded file name rather than the original file name
-					
-					if(isset($form->$columnName->data['file_name'])) { // this is for when the file name isn't required
-						$this->objectReference->$columnName = $form->$columnName->data['file_name'];
+					if(isset($this->form->$columnName->data['file_name'])) { // this is for when the file name isn't required
+						$this->objectReference->$columnName = $this->form->$columnName->data['file_name'];
 					} else {
 						Kohana::log('debug', 'File data not submitted');
 					}

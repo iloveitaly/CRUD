@@ -32,10 +32,21 @@ if(Kohana::config('admin.manage_relationships')) {
 <table>
 <tr>
 <?
+$relationshipViewFieldSuffix = strlen($this->crud->relationshipViewFieldSuffix);
+
 foreach($columns as $columnName => $columnInfo):
 	// if 'content' contains function then it is a custom content transformer
 	
-	if(is_callable($columnInfo['content']) && $columnInfo['type'] == 'custom') {
+	// all relationships are handled as content functions, but they are also defined in the relationship array
+	// one-to-one relationships are sortable so we have to check for them and handle them as a special case
+	// note that all relationship fields are view-only fields thus they will have the $relationshipViewFieldSuffix attatched to them
+	
+	if(strlen($columnName) > $relationshipViewFieldSuffix)
+		$possibleRelationshipFieldName = substr($columnName, 0, -$relationshipViewFieldSuffix);
+
+	if(!empty($possibleRelationshipFieldName) && isset($relationships[$possibleRelationshipFieldName]) && $relationships[$possibleRelationshipFieldName]['type'] == 'one') {
+		$sortString = '?'.url::get_query_string(array('s' => $possibleRelationshipFieldName.'_id', 'd' => isset($get['s']) && $get['d'] == 'a' ? 'd' : 'a'));
+	} else if(is_callable($columnInfo['content']) && $columnInfo['type'] == 'custom') {
 		$sortString = '';
 	} else {
 		$sortString = '?'.url::get_query_string(array('s' => $columnName, 'd' => isset($get['s']) && $get['d'] == 'a' ? 'd' : 'a'));
