@@ -339,7 +339,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	protected function createFileChooser($columnName, $directoryPath, $allowedFiles = array('jpg', 'pdf', 'jpeg', 'png', 'gif')) {
 		create_path(DOCROOT.normalize_path($directoryPath, FALSE));
 		
-		$this->columns[$columnName]['type'] = 'file';
+		$this->columns[$columnName]['type'] = 'efile';
 		$this->columns[$columnName]['allowed_types'] = implode('|', $allowedFiles);
 		$this->columns[$columnName]['upload_path'] = $directoryPath;
 	}
