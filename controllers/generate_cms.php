@@ -15,9 +15,8 @@ class Generate_Cms_Controller extends Controller {
 			echo "<h3>Database: {$dbName}</h3>";
 			echo "<p><ul>";
 			$db = new Database($dbName);
-			
 			foreach($db->list_tables() as $tableName) {
-				echo "<li>{$tableName}: <a href='".url::current(TRUE)."/controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current(TRUE)."/model/{$dbName}/{$tableName}'>Model</a></li>";
+				echo "<li>{$tableName}: <a href='".$_SERVER['REQUEST_URI']."/controller/{$dbName}/{$tableName}'>Controller</a> | <a href='".url::current(TRUE)."/model/{$dbName}/{$tableName}'>Model</a></li>";
 			}
 			
 			echo "</p></ul>";
