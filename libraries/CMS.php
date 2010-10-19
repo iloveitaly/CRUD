@@ -25,8 +25,9 @@ class CMS_Core extends Template_Controller {
 	protected $editDefaults = array();		// default to be copied over when an object is edited
 	
 	// options
-	protected $autoRedirect = FALSE;		// auto redirect user, useful for if you don't want to write redirect code in your subclass
+	protected $autoRedirect = FALSE;				// auto redirect user, useful for if you don't want to write redirect code in your subclass
 	public $autoAdjustRanking = false;
+	public $defaultSorting = array('id', 'DESC');	// array(sort field, sort direction)
 	
 	protected $crud;
 	
@@ -169,8 +170,8 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			$orderField = $query['s'];
 			$orderDirection = $query['d'] == 'a' ? 'ASC' : 'DESC';
 		} else {
-			$orderField = 'id';
-			$orderDirection = 'ASC';
+			$orderField = $this->defaultSorting[0];
+			$orderDirection = $this->defaultSorting[1];
 		}
 		
 		if(!$query_object) {
