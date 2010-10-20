@@ -2,11 +2,13 @@
 class CMS_Core extends Template_Controller {
 	public $template = "main";
 	
+	// variables set by the constructor
 	public $controller_name;
 	public $base_config;
-	public $columns = array();
 	public $relationship_controllers;
+	
 	protected $filePickerList = array();
+	protected $quickSearchList = array();
 	
 	/*
 		Relationships define a many to many relationship
@@ -20,14 +22,14 @@ class CMS_Core extends Template_Controller {
 		
 	*/
 	public $relationships = array();
-	
-	protected $createDefaults = array();	// defaults to be copied over when an object is created
-	protected $editDefaults = array();		// default to be copied over when an object is edited
+	public $columns = array();
 	
 	// options
+	protected $createDefaults = array();	// defaults to be copied over when an object is created
+	protected $editDefaults = array();		// default to be copied over when an object is edited
 	protected $autoRedirect = FALSE;				// auto redirect user, useful for if you don't want to write redirect code in your subclass
+	protected $defaultSorting = array('id', 'DESC');	// array(sort field, sort direction)
 	public $autoAdjustRanking = false;
-	public $defaultSorting = array('id', 'DESC');	// array(sort field, sort direction)
 	
 	protected $crud;
 	
@@ -75,10 +77,11 @@ class CMS_Core extends Template_Controller {
 		// check if there is a text area, if so install CKEditor
 		// only check for text editors when we are not in edit mode
 		
+		$domReadyJavascript = '';
+		
 		if(Router::$method != 'view' && Router::$method != 'index') {
 			$editorAdded = false;
 			$datePickerAdded = false;
-			$domReadyJavascript = '';
 			
 			foreach($this->crud->columns as $columnName => $columnInfo) {
 				if($columnInfo['type'] == 'textarea' && !$editorAdded) {
@@ -141,11 +144,31 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 });
 ";
 				}
+			}			
+		} else if(Router::$method == 'view' || Router::$method == 'index') { // then we are in view mode
+			foreach($this->quickSearchList as $columnName => $searchInfo) {
+				$domReadyJavascript .= "
+new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['action_url']."search/".$columnName."', {
+	postVar: 'search',
+	selectMode: false,
+	minLength: 3,
+	width: 'auto',
+	injectChoice:function(token) {
+		var choice = new Element('li', {'html': this.markQueryValue(token['display_name'])});
+		choice.inputValue = token['display_name'];
+		choice.inputData = token;
+		this.addChoiceEvents(choice).inject(this.choices);
+	},
+	onSelection:function(element, selected, selection) {
+		window.location.href = '".$this->base_config['action_url']."edit/' + selected.inputData['id'];
+	}
+});
+";
 			}
-			
-			if(!empty($domReadyJavascript))
-				$this->template->head->javascript->append_script('window.addEvent("domready", function() {'.$domReadyJavascript.'});');
 		}
+		
+		if(!empty($domReadyJavascript))
+			$this->template->head->javascript->append_script('window.addEvent("domready", function() {'.$domReadyJavascript.'});');
 		
 		// setup some common defaults
 		
@@ -202,7 +225,8 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 			'columns' => $columnNames,
 			'relationships' => $this->crud->relationships,
 			'options' => $options,
-			'pages' => $pagination->render('digg')
+			'pages' => $pagination->render('digg'),
+			'quick_search' => $this->quickSearchList,
 		)));
 	}
 	
@@ -269,17 +293,27 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		$post = $this->input->post();
 		$emptyMessage = array(array('display_name' => 'No Results Found', 'id' => ''));
 		
-		if(empty($post['search']) || empty($this->crud->relationships[$searchName])) {
+		if(empty($post['search']) || (empty($this->crud->relationships[$searchName]) && empty($this->quickSearchList[$searchName]))) {
 			exit(json_encode($emptyMessage));
+		}
+		
+		if(empty($this->quickSearchList[$searchName])) {
+			$modelName = $searchName;
+			$searchField = $this->crud->relationships[$searchName]['display_key'];
+			$displayFields = $this->crud->relationships[$searchName]['search_fields'];
+		} else {
+			$modelName = $this->crud->orm_name;
+			$searchField = $searchName;
+			$displayFields = $this->quickSearchList[$searchField];
 		}
 				
 		$search = $post['search'];
-		$results = ORM::factory($searchName)->like($this->crud->relationships[$searchName]['display_key'], $search)->find_all();
+		$results = ORM::factory($modelName)->like($searchName, $search)->find_all();
 		$processedResults = array();
 
 		foreach($results as $result) {
 			$processedResults[] = array(
-				'display_name' => implode_with_keys(' ', (array) $result->as_array(), $this->crud->relationships[$searchName]['search_fields']),
+				'display_name' => implode_with_keys(' ', (array) $result->as_array(), $displayFields),
 				'id' => $result->id
 			);
 		}
@@ -343,6 +377,10 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		$this->columns[$columnName]['type'] = 'efile';
 		$this->columns[$columnName]['allowed_types'] = implode('|', $allowedFiles);
 		$this->columns[$columnName]['upload_path'] = $directoryPath;
+	}
+	
+	protected function createQuickSearch($columnName, $displayFields) {
+		$this->quickSearchList[$columnName] = $displayFields;
 	}
 	
 	public function __call($method, $arguments) {
