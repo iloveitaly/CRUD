@@ -77,7 +77,8 @@ foreach($columns as $columnName => $columnInfo):
 		} else {
 			switch($columnInfo['content']) {
 				case 'date':
-					$columnDisplayData = gmdate(Kohana::config('admin.date_format'), $entry->$columnName);
+					// force nowrap for the dates... it is ackward to have a wrapping date
+					$columnDisplayData = "<span style='white-space:nowrap'>".gmdate(Kohana::config('admin.date_format'), $entry->$columnName)."</span>";
 					break;
 				case 'datetime':
 					$columnDisplayData = gmdate(Kohana::config('admin.datetime_format'), $entry->$columnName);

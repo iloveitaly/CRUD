@@ -297,6 +297,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 			exit(json_encode($emptyMessage));
 		}
 		
+		// this searching function is used for both the editing functionality (for one-to-one relationship choices) and for the viewing functionality (ease of jumping to a specific entry)
 		if(empty($this->quickSearchList[$searchName])) {
 			$modelName = $searchName;
 			$searchField = $this->crud->relationships[$searchName]['display_key'];
