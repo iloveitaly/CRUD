@@ -126,6 +126,7 @@ new DatePicker(".'.$columnInfo['class'].'", {
 					// the search queries are handled by $this->search() and return a json object with two fields: display_name & id
 					
 					$baseColumnName = substr($columnName, 0, strlen($columnName) - strlen($this->crud->relationshipSearchFieldSuffix));
+					$inlineEditLink = $this->relationships[$baseColumnName]['manage'];
 					$domReadyJavascript .= "
 new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_url']."search/".$baseColumnName."', {
 	postVar: 'search',
@@ -140,9 +141,26 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 	},
 	onSelection:function(element, selected, selection) {
 		$('{$baseColumnName}_id').set('value', selected.inputData['id']);
+		
+		".($inlineEditLink ? "$('edit_link_{$baseColumnName}').href = '".$this->base_config['action_url']."{$baseColumnName}/edit/' + selected.inputData['id'];" : '')."
 	}
 });
 ";
+					if($inlineEditLink) {
+						$domReadyJavascript .= "
+var linkText{$baseColumnName} = new Element('a', {
+	'id': 'edit_link_{$baseColumnName}',
+	'href': '".$this->base_config['action_url']."{$baseColumnName}/edit/' + $('{$baseColumnName}_id').get('value'),
+	'target':'_blank',
+	'html':'(".inflector::titlize($baseColumnName)." Info)',
+	'styles': {
+		'margin-left':'5px'
+	}
+});
+
+$('{$baseColumnName}_search').getParent().grab(linkText{$baseColumnName});
+";
+					}
 				}
 			}			
 		} else if(Router::$method == 'view' || Router::$method == 'index') { // then we are in view mode
