@@ -309,7 +309,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		}
 				
 		$search = $post['search'];
-		$results = ORM::factory($modelName)->like($searchName, $search)->find_all();
+		$results = ORM::factory($modelName)->like($searchField, $search)->find_all();
 		$processedResults = array();
 
 		foreach($results as $result) {
