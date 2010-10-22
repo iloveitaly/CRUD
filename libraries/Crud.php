@@ -135,6 +135,8 @@ class Crud_Core extends FormGen_Core {
 			$page = ORM::factory($this->orm_name, (int) $id);
 		}
 		
+		// process() assigns $this->objectReference to $page
+		
 		if($this->process($page)) {			
 			return array('mode' => $mode, 'data' => $page);
 		} else {

@@ -5,7 +5,7 @@ class FormGen_Core extends Controller {
 	public $relationships;
 	
 	protected $filteredColumns;
-	protected $objectReference;
+	public $objectReference;		// reference to the object being edited. Most likely this will be an ORM model but in cases on a form that is not associated with a database $objectReference can simply be an array
 	
 	public $errors;
 	public $base_config;

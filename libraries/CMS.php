@@ -143,6 +143,7 @@ new Autocompleter.Request.JSON('{$columnName}', '".$this->base_config['action_ur
 		$('{$baseColumnName}_id').set('value', selected.inputData['id']);
 		
 		".($inlineEditLink ? "$('edit_link_{$baseColumnName}').href = '".$this->base_config['action_url']."{$baseColumnName}/edit/' + selected.inputData['id'];" : '')."
+		".($inlineEditLink ? "$('edit_link_{$baseColumnName}').setStyle('display', 'inline');" : '')."
 	}
 });
 ";
@@ -152,13 +153,17 @@ var linkText{$baseColumnName} = new Element('a', {
 	'id': 'edit_link_{$baseColumnName}',
 	'href': '".$this->base_config['action_url']."{$baseColumnName}/edit/' + $('{$baseColumnName}_id').get('value'),
 	'target':'_blank',
-	'html':'(".inflector::titlize($baseColumnName)." Info)',
+	'html':'(Edit ".inflector::titlize($baseColumnName).")',
 	'styles': {
 		'margin-left':'5px'
 	}
 });
 
 $('{$baseColumnName}_search').getParent().grab(linkText{$baseColumnName});
+
+if(!$('{$baseColumnName}_id').get('value')) {
+	$('edit_link_{$baseColumnName}').setStyle('display', 'none');
+}
 ";
 					}
 				}
