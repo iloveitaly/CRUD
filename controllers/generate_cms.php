@@ -204,7 +204,7 @@ EOL;
 				$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
 				
-				$processedFieldList[$fieldName] = array(
+				$relationshipFieldList[$fieldName] = array(
 					'type' => 'multi',
 					'manage' => true,
 					'columns' => $relationshipColumns,
