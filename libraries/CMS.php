@@ -85,23 +85,8 @@ class CMS_Core extends Template_Controller {
 			
 			foreach($this->crud->columns as $columnName => $columnInfo) {
 				if($columnInfo['type'] == 'textarea' && !$editorAdded) {
-					$this->template->head->javascript->append_file('/ckeditor/ckeditor.js');
-					$domReadyJavascript .= '
-var target = $$(".editor");
-
-if(target.length > 0) {
-	target = target[0];
-	
-	// remove the label
-	$$("label[for=\'" + target.getProperty("id") + "\']")[0].destroy();
-	
-	CKEDITOR.replace(target, {
-		//width:"730px",
-		height:"500px"
-	});
-}
-					';
-					
+					$this->template->head->javascript->append_file(IN_PRODUCTION ? '/ckeditor/ckeditor.js' : '/ckeditor/ckeditor_source.js');
+					$domReadyJavascript .= Kohana::config('admin.editor_javascript');
 					$editorAdded = true;
 				}
 				
