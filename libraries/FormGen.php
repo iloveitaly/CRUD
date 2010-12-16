@@ -64,7 +64,7 @@ class FormGen_Core extends Controller {
 			// if you want to hide a custom element from the email generation set restrict = view
 			if($columnInfo['type'] != 'custom') {
 				$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']);
-				$message .= ctype_punct($message[strlen($message) - 1]) ? ': ' : ' ';
+				$message .= ctype_punct($message[strlen($message) - 1]) ? ' ' : ': ';
 			}
 			
 			switch($columnInfo['type']) {
