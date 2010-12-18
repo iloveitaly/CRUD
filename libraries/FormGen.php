@@ -193,7 +193,8 @@ class FormGen_Core extends Controller {
 			$values['value'] = $columnData['value'];
 		}
 		
-		if($accessField = $this->isRelationshipField($columnName)) {
+		$accessField = $this->isRelationshipField($columnName);
+		if($accessField && isset($page->$accessField)) {
 			// then we are dealing with a relationship
 
 			if($columnData['type'] == 'mselect') {

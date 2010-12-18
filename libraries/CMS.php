@@ -315,7 +315,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 			$searchField = $searchName;
 			$displayFields = $this->quickSearchList[$searchField];
 		}
-				
+		
 		$search = $post['search'];
 		$results = ORM::factory($modelName)->like($searchField, $search)->find_all();
 		$processedResults = array();
@@ -326,7 +326,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 				'id' => $result->id
 			);
 		}
-		
+
 		if(empty($processedResults)) {
 			echo json_encode($emptyMessage);
 		} else {
