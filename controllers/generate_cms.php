@@ -60,6 +60,24 @@ class Generate_Cms_Controller extends Controller {
 		$outputContent .= "\tprotected \$has_many = array(".implode(',', $hasMany).");\n";
 		$outputContent .= "\tprotected \$has_one = array(".implode(',', $hasOne).");\n";
 		$outputContent .= "\tprotected \$has_and_belongs_to_many = array(".implode(',', $hasAndBelongsTo).");\n";
+		
+		// search for date range
+		if(in_array('start_date', array_keys($processedFields)) && in_array('end_date', array_keys($processedFields))) {
+			$outputContent .= "\n\tprotected \$_date_range;\n\n";
+			$outputContent .= <<<EOL
+	public function __get(\$key) {
+		if(\$key == 'date_range') {
+			if(empty(\$this->_date_range))
+				\$this->_date_range = new DateRange(\$this->start_date, \$this->end_date);
+			return \$this->_date_range;
+		}
+
+		return parent::__get(\$key);
+	}
+
+EOL;
+		}
+		
 		$outputContent .= "}\n?>\n";
 		
 		download::force($ormName.'.php', $outputContent);
