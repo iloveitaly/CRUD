@@ -18,9 +18,9 @@ if(target.length > 0) {
 	// remove the label
 	$$("label[for=\'" + target.getProperty("id") + "\']")[0].destroy();
 
-	// CKEDITOR.plugins.add("CKEDITOR.plugins.add");
 	CKEDITOR.replace(target, {
-		height:"500px"
+		height:"500px",
+		customConfig: '/includes/js/ckeditor/config.js'
 	});
 }
 
