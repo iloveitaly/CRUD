@@ -380,12 +380,18 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		$this->columns[$columnName]['type'] = 'select';
 	}
 	
-	protected function createFileChooser($columnName, $directoryPath, $allowedFiles = array('jpg', 'pdf', 'jpeg', 'png', 'gif')) {
+	protected function createFileChooser($columnName, $directoryPath, $relationship = FALSE, $allowedFiles = array('jpg', 'pdf', 'jpeg', 'png', 'gif')) {
 		create_path(DOCROOT.normalize_path($directoryPath, FALSE));
 		
-		$this->columns[$columnName]['type'] = 'efile';
-		$this->columns[$columnName]['allowed_types'] = implode('|', $allowedFiles);
-		$this->columns[$columnName]['upload_path'] = $directoryPath;
+		if($relationship === FALSE) {
+			$this->columns[$columnName]['type'] = 'efile';
+			$this->columns[$columnName]['allowed_types'] = implode('|', $allowedFiles);
+			$this->columns[$columnName]['upload_path'] = $directoryPath;
+		} else {
+			$this->relationships[$relationship]['columns'][$columnName]['type'] = 'efile';
+			$this->relationships[$relationship]['columns'][$columnName]['allowed_types'] = implode('|', $allowedFiles);
+			$this->relationships[$relationship]['columns'][$columnName]['upload_path'] = $directoryPath;
+		}
 	}
 	
 	protected function createQuickSearch($columnName, $displayFields) {
