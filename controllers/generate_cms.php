@@ -39,12 +39,11 @@ class Generate_Cms_Controller extends Controller {
 		$hasMany = array();
 		$hasAndBelongsTo = array();
 		
-		// generateColumnList will find one-to-one and one-to-many but not one-to-many relationships
-		
+		// generateColumnList will find one-to-one and one-to-many but not many-to-many relationships
 		foreach($relationshipFields as $relationshipName => $relationshipInfo) {
 			if($relationshipInfo['type'] == 'one') {
 				$hasOne[] = "'".$relationshipName."'";
-			} else if($relationshipInfo['type'] == 'one') {
+			} else if($relationshipInfo['type'] == 'multi') {
 				$hasAndBelongsTo[] = "'".$relationshipName."'";
 			}
 		}
@@ -52,6 +51,9 @@ class Generate_Cms_Controller extends Controller {
 		// search for one-to-many
 		
 		foreach($tableList as $tableName) {
+			// exclude pivot tables
+			if(strstr($tableName, inflector::plural($ormName)) !== FALSE) continue;
+			
 			if(array_search($ormName.'_id', array_keys($this->db->list_fields($tableName))) !== FALSE) {
 				$hasMany[] = "'".$tableName."'";
 			}
@@ -78,16 +80,18 @@ class Generate_Cms_Controller extends Controller {
 EOL;
 		} else {
 			$outputContent .= <<<EOL
+
 /*
 	public function __get(\$key) {
 		return parent::__get(\$key);
 	}
 */
+
 EOL;
 		}
 		
 		$outputContent .= "}\n?>\n";
-		
+
 		download::force($ormName.'.php', $outputContent);
 	}
 	
