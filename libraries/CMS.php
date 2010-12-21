@@ -27,11 +27,13 @@ class CMS_Core extends Template_Controller {
 	// options
 	protected $createDefaults = array();	// defaults to be copied over when an object is created
 	protected $editDefaults = array();		// default to be copied over when an object is edited
-	protected $autoRedirect = FALSE;				// auto redirect user, useful for if you don't want to write redirect code in your subclass
 	protected $defaultSorting = array('id', 'DESC');	// array(sort field, sort direction)
+	
+	protected $autoRedirect = FALSE;				// auto redirect user, useful for if you don't want to write redirect code in your subclass
 	public $autoAdjustRanking = false;
 	
 	protected $crud;
+	public $parent;	// for the relationship controller
 	
 	function __construct($file_path, $orm_name, $columns = array(), $relationships = array()) {
 		parent::__construct();
@@ -245,7 +247,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		// you can determine the editing/creating mode via 'mode' key
 		
 		$result = $this->crud->edit($id);
-		
+
 		if($result['mode'] == 'view') {
 			$this->template->content = new View('edit', array_merge($this->base_config, array(
 			    'page_title' => ($id != null ? 'Edit ' : 'Create ').$this->base_config['title'],
@@ -413,13 +415,24 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 				$relationships = isset($this->relationships[$method]['relationships']) ? $this->relationships[$method]['relationships'] : array();
 				
 				$controller = new CMS_Core($method, inflector::singular($method), $columns, $relationships);
+				$controller->parent = $this;
 				
 				// define auto_adjust_ranking in the relationship field to set the value for the relationship controller
 				// otherwise the value will be inherited from the parent controller
 				
 				$controller->autoRedirect = TRUE;
 				$controller->autoAdjustRanking = isset($this->relationships[$method]['auto_adjust_ranking']) ? $this->relationships[$method]['auto_adjust_ranking'] : $this->autoAdjustRanking;
-				$controller->base_config['action_url'] = Kohana::config('admin.base').$this->controller_name.'/'.$method.'/';
+				
+				// handle nested CMSs
+				$actionURL = Kohana::config('admin.base');				
+				$parent = $this->parent;
+				
+				while($parent) {
+					$actionURL .= $parent->controller_name.'/';
+					$parent = $parent->parent;
+				}
+				
+				$controller->base_config['action_url'] = $actionURL.$this->controller_name.'/'.$method.'/';
 				
 				$methodName = array_shift($arguments);
 				if(empty($methodName)) $methodName = 'index';
