@@ -76,6 +76,14 @@ class Generate_Cms_Controller extends Controller {
 	}
 
 EOL;
+		} else {
+			$outputContent .= <<<EOL
+/*
+	public function __get(\$key) {
+		return parent::__get(\$key);
+	}
+*/
+EOL;
 		}
 		
 		$outputContent .= "}\n?>\n";
@@ -218,11 +226,10 @@ EOL;
 		foreach($tableList as $otherTableName) {
 			if(strstr($otherTableName, '_'.$tableName) !== FALSE) {
 				// pivot tables are always structured as item_categories_items
-				
 				$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
 				
-				$relationshipFieldList[$fieldName] = array(
+				$relationshipFieldList[$relationshipTableName] = array(
 					'type' => 'multi',
 					'manage' => true,
 					'columns' => $relationshipColumns,
