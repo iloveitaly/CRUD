@@ -194,6 +194,15 @@ class FormGen_Core extends Controller {
 		}
 		
 		$accessField = $this->isRelationshipField($columnName);
+		
+		// the __isset function of ORM has a little bug
+		// for one-to-many relationships if the variable is not attempted to be retrieved first
+		// then the variable is reported as !set, so we try to recieve it if $accessField is true
+		if($accessField)
+			@$page->$accessField;
+		
+		// sometimes we have 'fake' multiple selects that pass at a relationship field
+		// checking to make sure the $accessField is set prevents a undefined variable error
 		if($accessField && isset($page->$accessField)) {
 			// then we are dealing with a relationship
 
