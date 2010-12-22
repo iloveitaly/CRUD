@@ -336,6 +336,25 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		}
 	}
 	
+	public function csv() {
+		$list = ORM::factory($this->orm_name)->find_all()->as_array();
+		$fileName = tempnam('/tmp', 'csv');
+		$handle = fopen($fileName, "w+");
+		
+		$fieldList = array_keys(ORM::factory($this->orm_name)->list_fields());
+		fputcsv($handle, $fieldList);
+		
+		foreach($list as $item) {
+			fputcsv($handle, (array) $item->as_array());
+		}
+				
+		download::force($fileName);
+		
+		fclose($handle);
+		unlink($fileName);
+		
+	}
+	
 	// $group:		Elements in the rank group
 	// $adjusted:	The element with the adjusted rank (note that $adjusted must have the adjusted rank & $group must contain the non-adjusted version of $adjusted)
 	protected function adjustRankOrdering($group, $adjusted) {
