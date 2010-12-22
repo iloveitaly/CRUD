@@ -23,6 +23,16 @@ class FormGen_Core extends Controller {
 	
 	protected $relationshipIdentifier = '[]';
 	
+	/*
+		$data_holder = array(
+			'columns' => array of column data
+			'base_config => array(
+				'submit_title' => title of the submit button
+				'form_title' => title of the fieldset
+			)
+ 		)
+	*/
+	
 	function __construct($data_holder) {
 		parent::__construct();
 		
@@ -51,9 +61,19 @@ class FormGen_Core extends Controller {
 		$this->normalizeColumnOptions();
 	}
 	
-	public function generate_email_message() {
+	public function generate_email_message($html = false) {
 		$post = $this->input->post();
 		$message = '';
+		
+		if($html) {
+			$message .= <<<EOL
+<style type="text/css" media="screen">
+	th {
+		text-align:left;
+	}
+</style><table>
+EOL;
+		}
 
 		// this could be a bit more advanced: question --> answer inflections, i.e.:
 		// How many people at parish? --> People at parish:
@@ -63,8 +83,16 @@ class FormGen_Core extends Controller {
 			
 			// if you want to hide a custom element from the email generation set restrict = view
 			if($columnInfo['type'] != 'custom') {
-				$message .= (empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label']);
-				$message .= ctype_punct($message[strlen($message) - 1]) ? ' ' : ': ';
+				$columnDisplayName = empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label'];
+				
+				if($html) {
+					$message .= "<tr><th>".$columnDisplayName."</th><td>";
+				} else {
+					$message .= $columnDisplayName;
+					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
+				}
+			} else if($html) {
+				$message .= "<tr><td colspan=\"2\">";
 			}
 			
 			switch($columnInfo['type']) {
@@ -73,16 +101,20 @@ class FormGen_Core extends Controller {
 					// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
 				
 					$convertedList = array_values($this->form->$columnName->value);
-					$message.= implode(', ', $convertedList)."\n";
+					$message .= implode(', ', $convertedList).(!$html ? "\n" : '');
 					
 					break;
 				case 'custom':
 					$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
 					break;
 				default:
-					$message .= $post[$columnName]."\n";
+					$message .= $post[$columnName].(!$html ? "\n" : '');
 			}
+			
+			if($html) $message .= "</td></tr>";
 		}
+		
+		if($html) $message .= "</table>";
 		
 		return $message;
 	}
@@ -173,7 +205,7 @@ class FormGen_Core extends Controller {
 			'columns' => $this->filteredColumns,
 			'form' => $compiledForm
 		));
-		
+
 		return View::factory($this->edit_template, array_merge($this->base_config, array(
 			'form' => $compiledForm,	// for the open/close form tags
 			'fields' => $compiledFields,

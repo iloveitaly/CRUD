@@ -25,7 +25,7 @@ if(ctype_punct($fieldDisplayName[strlen($fieldDisplayName) - 1])) {
 
 <?=$form['open']?>
 <fieldset>
-<?=isset($form_title) ? "<legend>".$form_title."</legend>" : ''?>
+<?=!empty($form_title) ? "<legend>".$form_title."</legend>" : ''?>
 <?=$fields?>
 <p style="text-align:center"><?=form::submit('submit_button', $submit_title)?></p>
 </fieldset>
