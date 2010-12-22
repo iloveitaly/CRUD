@@ -93,8 +93,7 @@ EOL;
 			$customPropertiesList[] = <<<EOL
 
 		if(\$key == 'short_address') { // code w/comments: http://snipplr.com/view.php?codeview&id=46053
-			return \$this->name.' in '.\$this->city.' '.\$this->providence.
-				(empty(\$this->city) || empty(\$this->providence) ? ' '.\$this->country : '');
+			return \$this->name.' in '.\$this->city.' '.\$this->providence.(empty(\$this->city) || empty(\$this->providence) ? ' '.\$this->country : '');
 		} else if(\$key == 'full_address') {
 			if(\$this->country == 'US') {
 				return trim(trim(\$this->address1."\\n".\$this->address2)."\\n".\$this->city).", ".\$this->providence." ".\$this->postal_code;
@@ -120,8 +119,8 @@ EOL;
 		}
 		
 		$outputContent .= "}\n?>\n";
-		echo $outputContent;
-		// download::force($ormName.'.php', $outputContent);
+		
+		download::force($ormName.'.php', $outputContent);
 	}
 	
 	public function controller($dbName, $table) {
@@ -192,7 +191,7 @@ EOL;
 		
 		$outputContent .= "}\n?>\n";
 		
-		// download::force(strtolower($controllerName).'.php', $outputContent);
+		download::force(strtolower($controllerName).'.php', $outputContent);
 	}
 	
 	protected function generateColumnList($tableName, $relationshipTable = false) {
@@ -279,12 +278,19 @@ EOL;
 				if(strstr($otherTableName, '_'.$tableName) !== FALSE) {
 					$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
 				} else {
-					$relationshipTableName = substr($otherTableName, 0, -(strlen($otherTableName) - strlen($tableName)));
+					// then the table that is being examined is on the the left of the pivot table name
+					$relationshipTableName = substr($otherTableName, -(strlen($otherTableName) - strlen($tableName)) + 1);
+				}
+				
+				if($relationshipTableName == $tableName) {
+					echo "LOOP:<br/>".$relationshipTableName."<br/>";
+					echo $tableName."<br/>".$otherTableName;
+					exit();
 				}
 				
 				// since this *could* result in a rescursive function (for a pivot table) we have to 
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
-				
+
 				$relationshipFieldList[$relationshipTableName] = array(
 					'type' => 'multi',
 					'manage' => true,
