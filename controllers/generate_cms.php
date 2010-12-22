@@ -1,6 +1,14 @@
 <?
 class Generate_Cms_Controller extends Controller {
 	const ALLOW_PRODUCTION = FALSE;
+		
+	protected $get_template = <<<EOL
+	
+	public function __get(\$key) {%s
+		return parent::__get(\$key);
+	}
+
+EOL;
 	
 	public function __construct() {
 		parent::__construct();
@@ -23,22 +31,22 @@ class Generate_Cms_Controller extends Controller {
 		}
 	}
 	
-	public function model($dbName, $table) {
+	public function model($dbName, $rootTableName) {
 		$this->db = new Database($dbName);
 		$tableList = $this->db->list_tables();
 				
-		$ormName = inflector::singular($table);
+		$ormName = inflector::singular($rootTableName);
 		$controllerName = str_replace(' ', '_', ucwords(str_replace('_', ' ', $ormName)));
 		
 		$outputContent = "<?php\n";
 		$outputContent .= "class {$controllerName}_Model extends ORM {\n";
-		
-		list($processedFields, $relationshipFields) = $this->generateColumnList($table);
+
+		list($processedFields, $relationshipFields) = $this->generateColumnList($rootTableName);
 		
 		$hasOne = array();
 		$hasMany = array();
 		$hasAndBelongsTo = array();
-		
+
 		// generateColumnList will find one-to-one and one-to-many but not many-to-many relationships
 		foreach($relationshipFields as $relationshipName => $relationshipInfo) {
 			if($relationshipInfo['type'] == 'one') {
@@ -64,35 +72,56 @@ class Generate_Cms_Controller extends Controller {
 		$outputContent .= "\tprotected \$has_and_belongs_to_many = array(".implode(',', $hasAndBelongsTo).");\n";
 		
 		// search for date range
-		if(in_array('start_date', array_keys($processedFields)) && in_array('end_date', array_keys($processedFields))) {
+		// TODO: in the future an __isset should be generated for each of the properties too
+		
+		$customPropertiesList = array();
+		$tableFields = array_keys($processedFields);
+		
+		if(in_array('start_date', $tableFields) && in_array('end_date', $tableFields)) {
 			$outputContent .= "\n\tprotected \$_date_range;\n\n";
-			$outputContent .= <<<EOL
-	public function __get(\$key) {
+			$customPropertiesList[] = <<<EOL
 		if(\$key == 'date_range') {
 			if(empty(\$this->_date_range))
 				\$this->_date_range = new DateRange(\$this->start_date, \$this->end_date);
 			return \$this->_date_range;
 		}
-
-		return parent::__get(\$key);
-	}
-
 EOL;
-		} else {
-			$outputContent .= <<<EOL
+		}
 
-/*
-	public function __get(\$key) {
-		return parent::__get(\$key);
-	}
-*/
+		if(in_array('address1', $tableFields) && in_array('postal_code', $tableFields)) {
+			// then we have address information stored in the table
+			$customPropertiesList[] = <<<EOL
 
+		if(\$key == 'short_address') { // code w/comments: http://snipplr.com/view.php?codeview&id=46053
+			return \$this->name.' in '.\$this->city.' '.\$this->providence.
+				(empty(\$this->city) || empty(\$this->providence) ? ' '.\$this->country : '');
+		} else if(\$key == 'full_address') {
+			if(\$this->country == 'US') {
+				return trim(trim(\$this->address1."\\n".\$this->address2)."\\n".\$this->city).", ".\$this->providence." ".\$this->postal_code;
+			} else {
+				return trim(trim(\$this->address1."\\n".\$this->address2)."\\n".\$this->city).", ".\$this->providence." ".\$this->postal_code." ".\$this->country;
+			}
+		}
 EOL;
 		}
 		
+		if(count($customPropertiesList) == 0) {
+			$outputContent .= "/*".sprintf($this->get_template, '')."*/\n";
+		} else {
+			$propertyCode = '';
+			$l = count($customPropertiesList);
+			
+			foreach($customPropertiesList as $property) {
+				$propertyCode .= $property;
+				if(--$l > 0) $propertyCode .= 'else ';
+			}
+			
+			$outputContent .= sprintf($this->get_template, $propertyCode."\n");
+		}
+		
 		$outputContent .= "}\n?>\n";
-
-		download::force($ormName.'.php', $outputContent);
+		echo $outputContent;
+		// download::force($ormName.'.php', $outputContent);
 	}
 	
 	public function controller($dbName, $table) {
@@ -163,10 +192,24 @@ EOL;
 		
 		$outputContent .= "}\n?>\n";
 		
-		download::force(strtolower($controllerName).'.php', $outputContent);
+		// download::force(strtolower($controllerName).'.php', $outputContent);
 	}
 	
 	protected function generateColumnList($tableName, $relationshipTable = false) {
+		// the generateColumnList method will only be used once in any given session... you can't generate a controller & model at the same time
+		// although this is a bit lazy, we can just reset it on first run
+		
+		if(empty($this->processedTableList)) {
+			$this->processedTableList = array();
+		}
+		
+		// check for circular references
+		if(!in_array($tableName, $this->processedTableList)) {
+			$this->processedTableList[] = $tableName;
+		} else {
+			return;
+		}
+		
 		$fieldList = $this->db->list_fields($tableName);
 		
 		$processedFieldList = array();
@@ -224,13 +267,22 @@ EOL;
 		}
 		
 		// look for pivot tables
-		
+
 		$tableList = $this->db->list_tables();
 		
 		foreach($tableList as $otherTableName) {
-			if(strstr($otherTableName, '_'.$tableName) !== FALSE) {
+			// I think the merging order (tabla vs tableb) is determined alphabetically
+			// since we only know one side of the equation we have to try both combinations
+			
+			if(strstr($otherTableName, '_'.$tableName) !== FALSE || strstr($otherTableName, $tableName.'_') !== FALSE) {
 				// pivot tables are always structured as item_categories_items
-				$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
+				if(strstr($otherTableName, '_'.$tableName) !== FALSE) {
+					$relationshipTableName = substr($otherTableName, 0, -(strlen($tableName) + 1));
+				} else {
+					$relationshipTableName = substr($otherTableName, 0, -(strlen($otherTableName) - strlen($tableName)));
+				}
+				
+				// since this *could* result in a rescursive function (for a pivot table) we have to 
 				list($tmp, $relationshipColumns) = $this->generateColumnList($relationshipTableName);
 				
 				$relationshipFieldList[$relationshipTableName] = array(
@@ -268,11 +320,6 @@ EOL;
 		$arrayRep = preg_replace('/[ ]{2}/', "\t", $arrayRep);
 		$arrayRep = preg_replace("/\=\>[ \n\t]+array[ ]+\(/", '=> array(', $arrayRep);
 		return $arrayRep = preg_replace("/\n/", "\n\t", $arrayRep);
-		
-		$arrayRep = preg_replace('/\)$/', "\t);\n", $arrayRep);
-		$arrayRep = str_replace(" \n\t\t", ' ', $arrayRep);
-		$arrayRep = preg_replace('/^/', "\t", $arrayRep);
-		return $arrayRep;
 	}
 }
 ?>
