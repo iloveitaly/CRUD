@@ -12,6 +12,7 @@ if(empty($info)) $info = '';
 $timezoneOffset = Kohana::config('admin.timezone_offset');
 
 $addButton = array_search('add', $options) !== FALSE ? "<a href=\"{$action_url}edit/\">&raquo; Add New {$title}</a>" : '';
+$csvButton = array_search('csv', $options) !== FALSE ? "<a href=\"{$action_url}csv\">&raquo; Download CSV File</a>" : '';
 $relationButtons = '';
 
 if(Kohana::config('admin.manage_relationships')) {
@@ -30,8 +31,10 @@ if(Kohana::config('admin.manage_relationships')) {
 <?foreach($quick_search as $searchField => $searchInfo):?>
 <p><b>Quick Search by <?=inflector::titlize($searchField)?>:</b> <input type="text" name="<?=$searchField?>_search" class="quick_search auto-clear" title="Type to search..." id="<?=$searchField?>_search" /></p>
 <?endforeach?>
+<div class="buttons wrapper">
 <?=$addButton.$relationButtons?>
 <?=$pages?>
+</div>
 <table>
 <tr>
 <?
@@ -96,4 +99,6 @@ foreach($columns as $columnName => $columnInfo):
 <?endforeach;?>
 </table>
 <?=$pages?>
-<?=$addButton.$relationButtons?>
+<div class="buttons wrapper">
+<?=$addButton.$relationButtons.$csvButton?>
+</div>

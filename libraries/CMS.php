@@ -348,7 +348,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 			fputcsv($handle, (array) $item->as_array());
 		}
 				
-		download::force($fileName);
+		download::force($fileName, NULL, $this->orm_name.'.csv');
 		
 		fclose($handle);
 		unlink($fileName);
