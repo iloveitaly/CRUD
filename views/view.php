@@ -31,10 +31,10 @@ if(Kohana::config('admin.manage_relationships')) {
 <?foreach($quick_search as $searchField => $searchInfo):?>
 <p><b>Quick Search by <?=inflector::titlize($searchField)?>:</b> <input type="text" name="<?=$searchField?>_search" class="quick_search auto-clear" title="Type to search..." id="<?=$searchField?>_search" /></p>
 <?endforeach?>
-<div class="buttons wrapper">
+<p class="buttons wrapper">
 <?=$addButton.$relationButtons?>
+</p>
 <?=$pages?>
-</div>
 <table>
 <tr>
 <?
