@@ -92,7 +92,7 @@ EOL;
 					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
 				}
 			} else if($html) {
-				$message .= "<tr><td colspan=\"2\">";
+				$message .= "<tr><td colspan=\"2\" align=\"center\">";
 			}
 			
 			switch($columnInfo['type']) {
@@ -105,7 +105,11 @@ EOL;
 					
 					break;
 				case 'custom':
-					$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
+					if($html) {
+						$message .= "<h2>".str_replace(array(':'), '', $columnInfo['label']))."</h2>";
+					} else {
+						$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
+					}
 					break;
 				default:
 					$message .= $post[$columnName].(!$html ? "\n" : '');
