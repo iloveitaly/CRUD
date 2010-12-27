@@ -106,7 +106,7 @@ EOL;
 					break;
 				case 'custom':
 					if($html) {
-						$message .= "<h2>".str_replace(array(':'), '', $columnInfo['label']))."</h2>";
+						$message .= "<h2>".str_replace(array(':'), '', $columnInfo['label'])."</h2>";
 					} else {
 						$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
 					}
