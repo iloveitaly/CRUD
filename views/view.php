@@ -87,7 +87,8 @@ foreach($columns as $columnName => $columnInfo):
 					$columnDisplayData = gmdate(Kohana::config('admin.datetime_format'), $entry->$columnName);
 					break;
 				default:
-					$columnDisplayData = $entry->$columnName;
+					// soft hypens: http://stackoverflow.com/questions/320184/who-has-solved-the-long-word-breaks-my-div-problem-hint-not-stackoverflow
+					$columnDisplayData = preg_replace('/([^\s-]{5})([^\s-]{5})/', '$1&shy;$2', $entry->$columnName);
 			}
 		}
 	?>
