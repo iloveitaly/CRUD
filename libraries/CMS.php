@@ -84,6 +84,7 @@ class CMS_Core extends Template_Controller {
 		if(Router::$method != 'view' && Router::$method != 'index') {
 			$editorAdded = false;
 			$datePickerAdded = false;
+			$dateTimePickerAdded = false;
 			
 			foreach($this->crud->columns as $columnName => $columnInfo) {
 				if($columnInfo['type'] == 'textarea' && !$editorAdded) {
@@ -93,15 +94,13 @@ class CMS_Core extends Template_Controller {
 				}
 				
 				if($columnInfo['content'] == 'date' && !$datePickerAdded) {
-					$domReadyJavascript .= '
-new DatePicker(".'.$columnInfo['class'].'", {
-	format: "'.Kohana::config('admin.date_format').'",
-	pickerClass: "datepicker_dashboard",
-	allowEmpty: true
-});
-					';
-					
+					$domReadyJavascript .= sprintf(Kohana::config('admin.datepicker_javascript'), $columnInfo['class'], Kohana::config('admin.date_format'));					
 					$datePickerAdded = true;
+				}
+				
+				if($columnInfo['content'] == 'datetime' && !$dateTimePickerAdded) {
+					$domReadyJavascript .= sprintf(Kohana::config('admin.datetimepicker_javascript'), $columnInfo['class'], Kohana::config('admin.datetime_format'));
+					$dateTimePickerAdded = true;
 				}
 				
 				if(strstr($columnName, $this->crud->relationshipSearchFieldSuffix) !== FALSE) {

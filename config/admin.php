@@ -25,4 +25,23 @@ if(target.length > 0) {
 }
 
 EOL;
+
+$config['datepicker_javascript'] = <<<EOL
+new DatePicker(".%s", {
+	format: "%s",
+	pickerClass: "datepicker_dashboard",
+	allowEmpty: true
+});
+
+EOL;
+
+$config['datetimepicker_javascript'] = <<<EOL
+new DatePicker('.%s', {
+	pickerClass:'datepicker_dashboard',
+	format:'%s',
+	timePicker: true,
+	allowEmpty: true
+});
+
+EOL;
 ?>
