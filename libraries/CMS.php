@@ -93,12 +93,12 @@ class CMS_Core extends Template_Controller {
 					$editorAdded = true;
 				}
 				
-				if($columnInfo['content'] == 'date' && !$datePickerAdded) {
+				if($columnInfo['content'] == 'date' && !empty($columnInfo['class']) && !$datePickerAdded) {
 					$domReadyJavascript .= sprintf(Kohana::config('admin.datepicker_javascript'), $columnInfo['class'], Kohana::config('admin.date_format'));					
 					$datePickerAdded = true;
 				}
 				
-				if($columnInfo['content'] == 'datetime' && !$dateTimePickerAdded) {
+				if($columnInfo['content'] == 'datetime' && !empty($columnInfo['class']) && !$dateTimePickerAdded) {
 					$domReadyJavascript .= sprintf(Kohana::config('admin.datetimepicker_javascript'), $columnInfo['class'], Kohana::config('admin.datetime_format'));
 					$dateTimePickerAdded = true;
 				}
