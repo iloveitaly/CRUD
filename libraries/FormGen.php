@@ -82,7 +82,14 @@ EOL;
 			if($columnInfo['restrict'] == 'view') continue;
 			
 			// if you want to hide a custom element from the email generation set restrict = view
-			if($columnInfo['type'] != 'custom') {
+			if($columnInfo['type'] == 'custom') {
+				// skip fields where columnInfo = FALSE
+				if(isset($columnInfo['email']) && !$columnInfo['email']) {
+					continue;
+				} else if($html) {
+					$message .= "<tr><td colspan=\"2\" align=\"center\">";
+				}
+			} else {
 				$columnDisplayName = empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label'];
 				
 				if($html) {
@@ -91,8 +98,6 @@ EOL;
 					$message .= $columnDisplayName;
 					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
 				}
-			} else if($html) {
-				$message .= "<tr><td colspan=\"2\" align=\"center\">";
 			}
 			
 			switch($columnInfo['type']) {
