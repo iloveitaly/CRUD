@@ -81,12 +81,14 @@ EOL;
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
 			
+			if(isset($columnInfo['email']) && !$columnInfo['email']) {
+				continue;
+			}
+			
 			// if you want to hide a custom element from the email generation set restrict = view
 			if($columnInfo['type'] == 'custom') {
 				// skip fields where columnInfo = FALSE
-				if(isset($columnInfo['email']) && !$columnInfo['email']) {
-					continue;
-				} else if($html) {
+				if($html) {
 					$message .= "<tr><td colspan=\"2\" align=\"center\">";
 				}
 			} else {
