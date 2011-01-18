@@ -31,6 +31,7 @@ class CMS_Core extends Template_Controller {
 	
 	protected $autoRedirect = FALSE;				// auto redirect user, useful for if you don't want to write redirect code in your subclass
 	public $autoAdjustRanking = false;
+	public $csvFields;
 	
 	protected $crud;
 	public $parent;	// for the relationship controller
@@ -336,22 +337,34 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 	}
 	
 	public function csv() {
+		if(!$this->csvFields) {
+			$this->csvFields = array();
+		}
+		
 		$list = ORM::factory($this->orm_name)->find_all()->as_array();
 		$fileName = tempnam('/tmp', 'csv');
 		$handle = fopen($fileName, "w+");
 		
+		// TODO titlize / respect label on fields
 		$fieldList = array_keys(ORM::factory($this->orm_name)->list_fields());
-		fputcsv($handle, $fieldList);
+		array_unshift($list, array_combine($fieldList, $fieldList));
 		
 		foreach($list as $item) {
-			fputcsv($handle, (array) $item->as_array());
+			$itemArray = !is_array($item) ? $item->as_array() : $item;
+			
+			if(!empty($this->csvFields))
+				foreach($itemArray as $key => $value)
+					if(!in_array($key, $this->csvFields))
+						unset($itemArray[$key]);
+			
+			// TODO: translate certain data types (relationships, dates) into a human readable form
+			fputcsv($handle, $itemArray);
 		}
 				
 		download::force($fileName, NULL, $this->orm_name.'.csv');
 		
 		fclose($handle);
 		unlink($fileName);
-		
 	}
 	
 	// $group:		Elements in the rank group
