@@ -410,7 +410,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		
 		$availableThumbs = listdir($targetPath, $allowedFiles);
 		$this->columns[$columnName]['values'] = array_from_keys_values($availableThumbs, $availableThumbs);
-		$this->columns[$columnName]['type'] = 'select';
+		$this->columns[$columnName]['type'] = !empty($this->columns[$columnName]['type']) ? $this->columns[$columnName]['type'] : 'select';
 	}
 	
 	protected function createFileChooser($columnName, $directoryPath, $relationship = FALSE, $allowedFiles = array('jpg', 'pdf', 'jpeg', 'png', 'gif')) {
