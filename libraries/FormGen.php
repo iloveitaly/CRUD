@@ -119,7 +119,7 @@ EOL;
 					}
 					break;
 				default:
-					$message .= $post[$columnName].(!$html ? "\n" : '');
+					$message .= $html ? preg_replace('/([^\s-]{5})([^\s-]{5})/', '$1&shy;$2', $post[$columnName]) : $post[$columnName]."\n";
 			}
 			
 			if($html) $message .= "</td></tr>";
