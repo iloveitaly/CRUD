@@ -95,7 +95,7 @@ EOL;
 				$columnDisplayName = empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label'];
 				
 				if($html) {
-					$message .= "<tr><th>".$columnDisplayName."</th><td>";
+					$message .= "<tr><th>".preg_replace('/([^\s-]{5})([^\s-]{5})/', '$1&shy;$2', $columnDisplayName)."</th><td>";
 				} else {
 					$message .= $columnDisplayName;
 					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
@@ -119,7 +119,7 @@ EOL;
 					}
 					break;
 				default:
-					$message .= $html ? preg_replace('/([^\s-]{5})([^\s-]{5})/', '$1&shy;$2', $post[$columnName]) : $post[$columnName]."\n";
+					$message .= $post[$columnName].(!$html ? "\n" : '');
 			}
 			
 			if($html) $message .= "</td></tr>";
