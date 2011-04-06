@@ -79,8 +79,7 @@ class Crud_Core extends FormGen_Core {
 				}
 			} else { // many
 				// for the view
-				
-				if(empty($relationshipInfo['restrict']) || $relationshipInfo['restrict'] == 'view') {
+				if(empty($relationshipInfo['restrict']) || $relationshipInfo['restrict'] != 'edit') {
 					$this->columns[$name] = array(
 						'restrict' => 'view',
 						'label' => $relationshipLabel,
