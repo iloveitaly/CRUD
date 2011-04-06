@@ -50,7 +50,7 @@ class Crud_Core extends FormGen_Core {
 					'content' => create_function('$ob', 'return ORM::factory("'.inflector::singular($name).'", $ob->'.$name.'_id)->'.$relationshipInfo['display_key'].';'),
 					'restrict' => 'view'
 				);
-				
+
 				if($relationshipInfo['restrict'] != 'view') {
 					// this isn't a perfect method since there can be duplicate display_keys and then only one displays
 					
@@ -79,13 +79,15 @@ class Crud_Core extends FormGen_Core {
 				}
 			} else { // many
 				// for the view
-			
-				$this->columns[$name] = array(
-					'restrict' => 'view',
-					'label' => $relationshipLabel,
-					'type' => 'custom',
-					'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')
-				);
+				
+				if(empty($relationshipInfo['restrict']) || $relationshipInfo['restrict'] == 'view') {
+					$this->columns[$name] = array(
+						'restrict' => 'view',
+						'label' => $relationshipLabel,
+						'type' => 'custom',
+						'content' => create_function('$arg', '$str = ""; foreach($arg->'.$name.' as $rel) {$str .= $rel->'.$relationshipInfo['display_key'].'."<br />";} return $str;')
+					);
+				}
 						
 				// for the edit field
 
