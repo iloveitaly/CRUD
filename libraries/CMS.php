@@ -414,7 +414,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 	}
 	
 	protected function createFileChooser($columnName, $directoryPath, $relationship = FALSE, $allowedFiles = array('jpg', 'pdf', 'jpeg', 'png', 'gif')) {
-		create_path(DOCROOT.normalize_path($directoryPath, FALSE));
+		create_path(join_paths(DOCROOT, $directoryPath));
 		
 		if($relationship === FALSE) {
 			$this->columns[$columnName]['type'] = 'efile';
