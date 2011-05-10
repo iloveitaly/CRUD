@@ -167,6 +167,9 @@ EOL;
 				// for some reason we have to manually assign label... bug?
 				// this label is displayed in the error 
 				$this->form->$columnName->label = $options['label'];
+			} else if($columnInfo['type'] == 'radio') {
+				$this->form->add_group($columnName, $options['values']);
+				$this->form->$columnName->label = $options['label'];
 			} else {
 				$this->form->add($columnInfo['type'], $columnName, $options);
 			}
@@ -209,7 +212,7 @@ EOL;
 		
 		return false;
 	}
-	
+		
 	public function generate() {
 		$compiledForm = $this->form->get(TRUE);
 		$compiledFields = View::factory($this->fields_template, array(
@@ -286,11 +289,23 @@ EOL;
 			$values['label'] = inflector::titlize($columnName);
 		}
 		
-		if(strrpos($columnData['type'], 'select') !== FALSE || $columnData['type'] == 'checkbox') {
+		if(strrpos($columnData['type'], 'select') !== FALSE || $columnData['type'] == 'checkbox' || $columnData['type'] == 'radio') {
 			// check to make sure values is an array, if not it will cause issues in select library
-			if(!is_array($columnData['values'])) Kohana::log('error', 'CRUD form generator found select values error for field '.$columnName);
+			if(!is_array($columnData['values']))
+				Kohana::log('error', 'CRUD form generator found select values error for field '.$columnName);
 			
-			$values['values'] = $columnData['values'];
+			// this is for convience, it will automatically generate 
+			if(!array_is_assoc($columnData['values'])) {
+				$optionValues = array_values($columnData['values']);
+				$optionKeys = array();
+				
+				foreach($optionValues as $value)
+					$optionKeys[] = inflector::computerize($value);
+
+				$values['values'] = array_combine($optionKeys, $optionValues);
+			} else {
+				$values['values'] = $columnData['values'];
+			}
 		}
 		
 		return $values;

@@ -7,5 +7,9 @@ class inflector extends inflector_Core {
 			return ucwords(self::humanize($rawTitle));
 		}
 	}
+	
+	public static function computerize($humanTitle) {
+		return self::underscore(strtolower($humanTitle));
+	}
 }
 ?>
