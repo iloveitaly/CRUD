@@ -10,7 +10,7 @@
 	<li><b>
 <?
 // although more messy than I would like this prevents two punctuation marks (i.e. ?: or .:) from appearing in the error box
-$fieldDisplayName = isset($form[$key]->label) ? $form[$key]->label : inflector::titlize($key);
+$fieldDisplayName = strip_tags(isset($form[$key]->label) ? $form[$key]->label : inflector::titlize($key));
 
 if(ctype_punct($fieldDisplayName[strlen($fieldDisplayName) - 1])) {
 	echo substr($fieldDisplayName, 0, strlen($fieldDisplayName) - 1);
