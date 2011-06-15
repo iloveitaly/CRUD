@@ -4,7 +4,7 @@
 ?>
 <?if(count($errors)):?>
 <div class='error'>
-<b>Submitted Information Has Errors:</b>
+<b>Some Required Information Was Not Entered:</b>
 <ul style="margin-bottom:0;">
 <?foreach($errors as $key => $value):?>
 	<li><b>
