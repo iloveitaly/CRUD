@@ -4,7 +4,7 @@
 
 if(empty($info)) $info = '';
 ?>
-<a href="<?=$action_url?>view">&raquo; View <?=ucwords(inflector::plural($title))?></a>
+<p class="buttons wrapper" style="padding-top:20px"><a href="<?=$action_url?>view">&raquo; Back to <?=ucwords(inflector::plural($title))?></a></p>
 <h2><?=$page_title?></h2>
 <?=$info?>
 <?=$form?>

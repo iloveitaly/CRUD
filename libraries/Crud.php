@@ -164,6 +164,11 @@ class Crud_Core extends FormGen_Core {
 				}
 			}
 			
+			// auto set the max rank
+			if(isset($this->columns['rank']) && !$page->loaded) {
+				$this->form->rank->value = ORM::factory($this->orm_name)->select('MAX(rank) as max')->find()->max + 1;
+			}
+			
 			return array('mode' => 'view', 'data' => $this->generate());
 		}
     }
