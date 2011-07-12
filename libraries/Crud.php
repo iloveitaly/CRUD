@@ -161,6 +161,13 @@ class Crud_Core extends FormGen_Core {
 					
 					// to generate the display value we implode the selected search keys
 					$this->form->$relationshipDisplayFieldName->value = implode_with_keys(' ', (array) ORM::factory($name, $this->form->$relationshipIDColumn->value)->as_array(), $relationshipInfo['search_fields']);
+				} else if($relationshipInfo['restrict'] != 'view' && !$page->loaded) {
+					// set default relationship value for new objects 
+					$relationshipFieldName = $name.$this->relationshipIdentifier;
+
+					if(empty($this->form->$relationshipFieldName->value)) {
+						$this->form->$relationshipFieldName->selected_values = array(array_shift(array_values($this->form->$relationshipFieldName->values)));
+					}
 				}
 			}
 			
