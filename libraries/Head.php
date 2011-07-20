@@ -92,7 +92,8 @@ class Head_Meta extends Head_Partial {
 }
 
 class Head_Title extends Head_Partial {
-	private $seperator = ' - '; // ' &mdash; '
+	private $seperator = ' - ';
+	private $rootSeperator = ' | ';
 	
 	public function __construct($title = '')
 	{
@@ -107,7 +108,7 @@ class Head_Title extends Head_Partial {
 
 	public function append($title)
 	{
-		$this['title'] .= $this->seperator.$title;
+		$this['title'] .= (strstr($this['title'], $this->rootSeperator) === FALSE ? $this->rootSeperator : $this->seperator).$title;
 		return $this;
 	}
 
