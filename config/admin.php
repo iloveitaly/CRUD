@@ -21,7 +21,7 @@ if(target.length > 0) {
 	CKEDITOR.replace(target, {
 		height:"500px",
 		width:"960px",
-		customConfig: '/includes/js/ckeditor/config.js'
+		customConfig: '/includes/js/core/ckeditor/config.js'
 	});
 }
 

@@ -6,7 +6,6 @@
 	</div>
 <?endif;?>
 	<ul class="tabs">
-		
 <?foreach(Kohana::config('admin.sections') as $name => $path):?>
 		<li><a href="<?=Kohana::config('admin.base').$path?>/"<?=strpos(url::current(), $path) !== FALSE ? ' class="selected"' : ''?>><?=$name?></a></li>
 <?endforeach;?>
