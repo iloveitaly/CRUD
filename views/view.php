@@ -23,7 +23,7 @@ if(Kohana::config('admin.manage_relationships')) {
 	}
 }
 ?>
-<h3><?=ucwords(inflector::plural($title))?></h3>
+<h1><?=ucwords(inflector::plural($title))?></h1>
 <?if($message = message::info()):?>
 <div id="info_message"><p><?=$message ?></p></div>
 <?endif;?>

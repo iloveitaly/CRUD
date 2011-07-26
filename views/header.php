@@ -15,7 +15,7 @@ foreach(Kohana::config('admin.sections') as $name => $path):
 		<a href="#"><?=$name?></a>
 		<ul>
 <?foreach($path as $subName => $subPath):?>
-			<li><a href="join_paths(<?=Kohana::config('admin.base'), $subPath)?>"><?=$subName?></a></li>
+			<li><a href="<?=join_paths(Kohana::config('admin.base'), $subPath)?>"><?=$subName?></a></li>
 <?endforeach;?>
 		</ul>
 	</li>
