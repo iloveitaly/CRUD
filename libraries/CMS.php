@@ -64,7 +64,8 @@ class CMS_Core extends Template_Controller {
 		$this->template->head = Head::instance();
 		$this->template->head->javascript->append_file(Kohana::config('admin.js'));
 		$this->template->head->css->append_file(Kohana::config('admin.css'));
-		$this->template->head->title->set(Kohana::config('admin.title').$this->base_config['title']);
+		$this->template->head->title->seperator = ' :: ';
+		$this->template->head->title->set(Kohana::config('admin.title'))->append($this->base_config['title']);
 		
 		// allow the columns & relationships to be passed as an argument
 		
@@ -249,6 +250,8 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		$result = $this->crud->edit($id);
 
 		if($result['mode'] == 'view') {
+			$this->template->head->title->append(inflector::titlize($result['mode']));
+
 			$this->template->content = new View('edit', array_merge($this->base_config, array(
 			    'page_title' => ($id != null ? 'Edit ' : 'Create ').$this->base_config['title'],
 				'info' => ''	// we include a empty string here to elminate errors when appending strings onto the info variable

@@ -6,7 +6,6 @@
 	<?=$head?>
 	<!-- <link rel="stylesheet" href="/includes/css/print.css" type="text/css" media="print" charset="utf-8"> -->
 	<!--[if lte IE 6]><link rel="stylesheet" href="/includes/css/lib/ie.css" type="text/css" media="screen" charset="utf-8"><![endif]-->
-	<title>Admin :: <?=$title?></title>
 </head>
 <body>
 <?=$header?>

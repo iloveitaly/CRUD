@@ -92,8 +92,8 @@ class Head_Meta extends Head_Partial {
 }
 
 class Head_Title extends Head_Partial {
-	private $seperator = ' - ';
-	private $rootSeperator = ' | ';
+	public $seperator = ' - ';
+	public $rootSeperator = ' | ';
 	
 	public function __construct($title = '')
 	{
