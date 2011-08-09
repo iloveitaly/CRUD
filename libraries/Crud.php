@@ -106,8 +106,8 @@ class Crud_Core extends FormGen_Core {
 		
 		// this works in most CMS situations (editing controller/edit/id, the id is then passed to edit())
 		// however in form generation situations we may want to define a custom action
-		
-		$this->form_action = Kohana::config('admin.base').url::current();
+		// set '/' as the default root
+		$this->form_action = (Kohana::config('admin.base') == '' ? '/' : Kohana::config('admin.base')).url::current();
 	}
 	
 	public function view() {
