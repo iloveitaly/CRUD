@@ -277,7 +277,25 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 			
 			if($this->autoAdjustRanking && isset($this->columns['rank'])) {
 				if($result['mode'] == 'edit') {
-					$this->adjustRankOrdering(ORM::factory($this->orm_name)->find_all(), $result['data']);
+					$ormModel = ORM::factory($this->orm_name);
+					
+					// here we can try to infer certain ranking models based on the type of variables that are set or the classes used
+					if(get_parent_class($ormModel) == "ORM_Tree") {
+						// then we want to grab the children that are in the same group as the object we are modifying
+						$rankGroup = $result['data']->parent->children;
+					} else if(!empty($ormModel->has_and_belongs_to_many)) {
+						// then this is probably a category-like object
+						// if the object is in multiple categories then we can't do anything
+						// if the object is only in one category we can grab that category group
+						
+						// TODO
+						$rankGroup = $ormModel->find_all();
+					} else {
+						// maybe its just a normal rank system after all
+						$rankGroup = $ormModel->find_all();
+					}
+					
+					$this->adjustRankOrdering($rankGroup, $result['data']);
 				} else {
 					$max = (int) ORM::factory($this->orm_name)->select('MAX(rank) as max')->orderby('rank' ,'DESC')->find()->max + 1;					
 					$result['data']->rank = $max;
