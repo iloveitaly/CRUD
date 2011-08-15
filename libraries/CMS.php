@@ -430,6 +430,7 @@ new Autocompleter.Request.JSON('{$columnName}_search', '".$this->base_config['ac
 		create_path($targetPath);
 		
 		$availableThumbs = listdir($targetPath, $allowedFiles);
+		sort($availableThumbs, SORT_STRING);
 		$this->columns[$columnName]['values'] = array_from_keys_values($availableThumbs, $availableThumbs);
 		$this->columns[$columnName]['type'] = !empty($this->columns[$columnName]['type']) ? $this->columns[$columnName]['type'] : 'select';
 	}
