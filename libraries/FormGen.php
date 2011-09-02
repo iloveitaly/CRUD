@@ -52,6 +52,8 @@ class FormGen_Core extends Controller {
 			$this->base_config = array(
 				'submit_title' => 'Submit'
 			);
+		} else {
+			if(!empty($this->base_config['form_class'])) $this->form_class = $this->base_config['form_class'];
 		}
 		
 		// note that base_config should contain the following:
