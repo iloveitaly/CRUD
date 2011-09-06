@@ -27,7 +27,8 @@ class FormGen_Core extends Controller {
 		$data_holder = array(
 			'columns' => array of column data
 			'base_config => array(
-				'submit_title' => title of the submit button
+				'submit_title' => 'title of the submit button,
+				'form_class' => 'sform',
 				'form_title' => title of the fieldset
 			)
  		)
@@ -36,11 +37,17 @@ class FormGen_Core extends Controller {
 	function __construct($data_holder) {
 		parent::__construct();
 		
-		// not sure if these are being copied or referenced
 		// if you want to overide any of the values in base_config in a super-super class (the class subclassing CMS) this may cause problems
 		// note that although orm_name is 'used' in this class it is NOT required, it is only referenced to have built in support for CRUD
 		
 		$data_holder = is_array($data_holder) ? (object) $data_holder : $data_holder;
+		
+		// if no columns are set, assume that the data_holder contains the columns
+		if(!isset($data_holder->columns)) {
+			$data_holder = (object) array(
+				'columns' => (array) $data_holder
+			);
+		}
 		
 		$this->columns = $data_holder->columns;
 		$this->errors = array();
@@ -50,9 +57,10 @@ class FormGen_Core extends Controller {
 		// if the config is empty set some default values
 		if(empty($this->base_config)) {
 			$this->base_config = array(
-				'submit_title' => 'Submit'
+				'submit_title' => 'Submit',
 			);
 		} else {
+			// copy some of the special base_config options
 			if(!empty($this->base_config['form_class'])) $this->form_class = $this->base_config['form_class'];
 		}
 		
@@ -135,7 +143,7 @@ EOL;
 	// returns true if the post data validated against the form
 	
 	public function process(& $ref = null) {
-		$this->objectReference = $ref ? $ref : (object)'';
+		$this->objectReference = $ref ? $ref : new stdClass();
 		$this->filteredColumns = array();
 		$this->form = Formo::factory($this->form_name ? $this->form_name : $this->orm_name)
 			->set('action', $this->form_action)
@@ -328,7 +336,19 @@ EOL;
 		//	default restrict: none
 		//	default content: text
 		
-		foreach($this->columns as $name => $columnInfo) {
+		// check for a flat array and convert to a associated array with name/key => blank array/value
+		// this is just for conveince
+		if(!array_is_assoc($this->columns)) {
+			$associatedColumns = array();
+
+			foreach($this->columns as $key => $columnName) {
+				$associatedColumns[$columnName] = array();
+			}
+			
+			$this->columns = $associatedColumns;
+		}
+
+		foreach($this->columns as $name => $columnInfo) {			
 			if(!isset($columnInfo['type'])) {
 				$this->columns[$name]['type'] = 'text';
 			}
