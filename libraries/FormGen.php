@@ -87,6 +87,7 @@ EOL;
 
 		// this could be a bit more advanced: question --> answer inflections, i.e.:
 		// How many people at parish? --> People at parish:
+
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
 			
@@ -111,7 +112,7 @@ EOL;
 				}
 			}
 						
-			if(empty($post[$columnName])) {
+			if(empty($post[$columnName]) && empty($this->objectReference->$columnName)) {
 				$message .= "Empty".(!$html ? "\n" : '');
 			} else switch($columnInfo['type']) {
 				case 'checkbox':
@@ -137,6 +138,8 @@ EOL;
 					} else {
 						$message .= $uploadedFilePath."\n";
 					}
+					
+					break;
 				default:
 					$message .= $post[$columnName].(!$html ? "\n" : '');
 			}
