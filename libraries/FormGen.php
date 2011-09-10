@@ -87,7 +87,6 @@ EOL;
 
 		// this could be a bit more advanced: question --> answer inflections, i.e.:
 		// How many people at parish? --> People at parish:
-		
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
 			
@@ -111,8 +110,10 @@ EOL;
 					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
 				}
 			}
-			
-			switch($columnInfo['type']) {
+						
+			if(empty($post[$columnName])) {
+				$message .= "Empty".(!$html ? "\n" : '');
+			} else switch($columnInfo['type']) {
 				case 'checkbox':
 					// if we are processing a checkbox they could select multiple options
 					// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
@@ -128,6 +129,14 @@ EOL;
 						$message .= "\n".preg_replace('#</?h[1-9]>|</?b>#', ' --- ', str_replace(array(':'), '', $columnInfo['label']))."\n\n";
 					}
 					break;
+				case 'file':
+					$uploadedFilePath = join_paths(url::base(), $columnInfo['upload_path'], $this->objectReference->$columnName);
+					
+					if($html) {
+						$message .= "<a href=\"".$uploadedFilePath."\">Download File</a>";
+					} else {
+						$message .= $uploadedFilePath."\n";
+					}
 				default:
 					$message .= $post[$columnName].(!$html ? "\n" : '');
 			}
