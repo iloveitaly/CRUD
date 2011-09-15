@@ -77,7 +77,7 @@ class Crud_Core extends FormGen_Core {
 						);
 					}
 				}
-			} else { // many
+			} else { // many-to-many relationship
 				// for the view
 				if(empty($relationshipInfo['restrict']) || $relationshipInfo['restrict'] != 'edit') {
 					$this->columns[$name] = array(
@@ -155,18 +155,32 @@ class Crud_Core extends FormGen_Core {
 			
 			// handle ajax one-to-one relationship value display 
 			foreach($this->relationships as $name => $relationshipInfo) {
-				if($relationshipInfo['restrict'] != 'view' && $relationshipInfo['selection'] == 'ajax') {
-					$relationshipDisplayFieldName = $name.$this->relationshipSearchFieldSuffix;
-					$relationshipIDColumn = $name.'_id';
+				if($relationshipInfo['type'] == "one") {
+					if($relationshipInfo['restrict'] != 'view' && $relationshipInfo['selection'] == 'ajax') {
+						$relationshipDisplayFieldName = $name.$this->relationshipSearchFieldSuffix;
+						$relationshipIDColumn = $name.'_id';
 					
-					// to generate the display value we implode the selected search keys
-					$this->form->$relationshipDisplayFieldName->value = implode_with_keys(' ', (array) ORM::factory($name, $this->form->$relationshipIDColumn->value)->as_array(), $relationshipInfo['search_fields']);
-				} else if($relationshipInfo['restrict'] != 'view' && !$page->loaded) {
-					// set default relationship value for new objects 
-					$relationshipFieldName = $name.$this->relationshipIdentifier;
+						// to generate the display value we implode the selected search keys
+						$this->form->$relationshipDisplayFieldName->value = implode_with_keys(' ', (array) ORM::factory($name, $this->form->$relationshipIDColumn->value)->as_array(), $relationshipInfo['search_fields']);
+					} else if($relationshipInfo['restrict'] != 'view' && !$page->loaded) {
+						// set default relationship value for new objects
+						// note that the UI element being used here is a plain select object
+						$relationshipFieldName = $name.'_id';
 
-					if(empty($this->form->$relationshipFieldName->value)) {
-						$this->form->$relationshipFieldName->selected_values = array(array_shift(array_values($this->form->$relationshipFieldName->values)));
+						if(empty($this->form->$relationshipFieldName->value)) {
+							$this->form->$relationshipFieldName->value = array(array_shift(array_values($this->form->$relationshipFieldName->values)));
+						}
+					}					
+				} else { // many-to-many relationship
+					if($relationshipInfo['restrict'] != 'view' && !$page->loaded) {
+						// then we are doing an html selection
+					
+						// set default relationship value for new objects 
+						$relationshipFieldName = $name.$this->relationshipIdentifier;
+
+						if(empty($this->form->$relationshipFieldName->value)) {
+							$this->form->$relationshipFieldName->selected_values = array(array_shift(array_values($this->form->$relationshipFieldName->values)));
+						}
 					}
 				}
 			}
