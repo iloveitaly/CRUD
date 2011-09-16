@@ -71,6 +71,34 @@ class FormGen_Core extends Controller {
 		$this->normalizeColumnOptions();
 	}
 	
+	public function generateWebRequest() {
+		// get a list of all keys used in the current submission, sort them, and create a unique signature for the submission
+		$formData = (array) $this->objectReference;
+		$keyList = array_keys($formData);
+		asort($keyList);
+		$uniqueKey = md5(http_build_query($keyList));
+		
+		// grab the request object to tie this request too
+		$requestPath = Router::$controller.'/'.Router::$method;
+		$requestType = ORM::factory('website_request_type')->where('key', $uniqueKey)->find();
+		
+		if(!$requestType->loaded) {
+			$requestType = ORM::factory('website_request_type');
+			$requestType->path = $requestPath;
+			$requestType->key = $uniqueKey;
+			$requestType->field_list = http_build_query(array_intersect_key($this->columns, $formData));
+			$requestType->save();
+		}
+		
+		$websiteRequest = ORM::factory('website_request');
+		$websiteRequest->website_request_type_id = $requestType;
+		$websiteRequest->date = gmmktime();
+		$websiteRequest->data = http_build_query($formData);
+		
+		return $websiteRequest;
+	}
+	
+	public function generateEmailMessage($html = false) { return $this->generate_email_message($html); }
 	public function generate_email_message($html = false) {
 		$post = $this->input->post();
 		$message = '';
@@ -118,9 +146,13 @@ EOL;
 				case 'checkbox':
 					// if we are processing a checkbox they could select multiple options
 					// formo returns a list of the keys in the values list, we have to grab the label values associated with each key
-				
-					$convertedList = array_values($this->form->$columnName->value);
-					$message .= implode(', ', $convertedList).(!$html ? "\n" : '');
+					
+					if(is_array($this->form->$columnName->value)) {
+						$convertedList = array_values($this->form->$columnName->value);
+						$message .= implode(', ', $convertedList).(!$html ? "\n" : '');
+					} else {
+						$message .= $this->form->$columnName->value.(!$html ? "\n" : '');
+					}
 					
 					break;
 				case 'custom':
@@ -184,7 +216,11 @@ EOL;
 			$options = $this->_getOptions($columnName, $columnInfo, $this->objectReference);
 			
 			if($columnInfo['type'] == 'checkbox') {
-				$this->form->add_group($columnName.$this->relationshipIdentifier, $options['values']);
+				if(!empty($options['values'])) {
+					$this->form->add_group($columnName.$this->relationshipIdentifier, $options['values']);
+				} else {
+					$this->form->add($columnInfo['type'], $columnName, $options);
+				}
 				
 				// for some reason we have to manually assign label... bug?
 				// this label is displayed in the error 
@@ -291,7 +327,7 @@ EOL;
 		}
 		
 		// this is a list of fields to be copied over as attributes (unless they are 'special' fields) of the HTML element
-		$copyList = array('style', 'class', 'required', 'label', 'placeholder', 'multiple', 'allowed_types', 'max_size', 'upload_path', 'rule', 'error_msg');
+		$copyList = array('style', 'class', 'checked', 'required', 'label', 'placeholder', 'multiple', 'allowed_types', 'max_size', 'upload_path', 'rule', 'error_msg');
 		
 		foreach($copyList as $attrib) {
 			if(isset($columnData[$attrib])) {
@@ -311,22 +347,26 @@ EOL;
 			$values['label'] = inflector::titlize($columnName);
 		}
 		
-		if(strrpos($columnData['type'], 'select') !== FALSE || $columnData['type'] == 'checkbox' || $columnData['type'] == 'radio') {
+		if(strrpos($columnData['type'], 'select') !== FALSE ||
+		   $columnData['type'] == 'checkbox' ||
+		   $columnData['type'] == 'radio'
+		) {
 			// check to make sure values is an array, if not it will cause issues in select library
-			if(!is_array($columnData['values']))
+			if($columnData['type'] == 'checkbox' && (empty($columnData['values']) || !is_array($columnData['values']))) {
 				Kohana::log('error', 'CRUD form generator found select values error for field '.$columnName);
-			
-			// this is for convience, it will automatically generate 
-			if(!array_is_assoc($columnData['values'])) {
-				$optionValues = array_values($columnData['values']);
-				$optionKeys = array();
+			} else {			
+				// this is for convience, it will automatically generate 
+				if(!array_is_assoc($columnData['values'])) {
+					$optionValues = array_values($columnData['values']);
+					$optionKeys = array();
 				
-				foreach($optionValues as $value)
-					$optionKeys[] = inflector::computerize($value);
-
-				$values['values'] = array_combine($optionKeys, $optionValues);
-			} else {
-				$values['values'] = $columnData['values'];
+					foreach($optionValues as $value)
+						$optionKeys[] = inflector::computerize($value);
+			
+					$values['values'] = array_combine($optionKeys, $optionValues);
+				} else {
+					$values['values'] = $columnData['values'];
+				}
 			}
 		}
 		
