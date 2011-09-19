@@ -98,8 +98,8 @@ class FormGen_Core extends Controller {
 		return $websiteRequest;
 	}
 	
-	public function generateEmailMessage($html = false) { return $this->generate_email_message($html); }
-	public function generate_email_message($html = false) {
+	public function generateEmailMessage($html = false, $excludeList = array()) { return $this->generate_email_message($html, $excludeList); }
+	public function generate_email_message($html = false, $excludeList = array()) {
 		$post = $this->input->post();
 		$message = '';
 		
@@ -109,7 +109,8 @@ class FormGen_Core extends Controller {
 	th {
 		text-align:left;
 	}
-</style><table>
+</style>
+<table>
 EOL;
 		}
 
@@ -118,6 +119,7 @@ EOL;
 
 		foreach($this->columns as $columnName => $columnInfo) {
 			if($columnInfo['restrict'] == 'view') continue;
+			if(in_array($columnName, $excludeList) === TRUE) continue;
 			
 			if(isset($columnInfo['email']) && !$columnInfo['email']) {
 				continue;
@@ -133,14 +135,14 @@ EOL;
 				$columnDisplayName = empty($columnInfo['label']) ? inflector::titlize($columnName) : $columnInfo['label'];
 				
 				if($html) {
-					$message .= "<tr><th width='50%'>".$columnDisplayName."</th><td>";
+					$message .= "<tr><th width='25%'>".$columnDisplayName."</th><td>";
 				} else {
 					$message .= $columnDisplayName;
 					$message .= ctype_punct($columnDisplayName[strlen($columnDisplayName) - 1]) ? ' ' : ': ';
 				}
 			}
 						
-			if(empty($post[$columnName]) && empty($this->objectReference->$columnName)) {
+			if(empty($post[$columnName]) && empty($this->objectReference->$columnName) && $columnInfo['type'] != 'custom') {
 				$message .= "Empty".(!$html ? "\n" : '');
 			} else switch($columnInfo['type']) {
 				case 'checkbox':
