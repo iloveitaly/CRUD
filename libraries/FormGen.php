@@ -329,7 +329,7 @@ EOL;
 		}
 		
 		// this is a list of fields to be copied over as attributes (unless they are 'special' fields) of the HTML element
-		$copyList = array('style', 'class', 'checked', 'required', 'label', 'placeholder', 'multiple', 'allowed_types', 'max_size', 'upload_path', 'rule', 'error_msg');
+		$copyList = array('style', 'class', 'checked', 'required', 'label', 'placeholder', 'autocomplete', 'multiple', 'allowed_types', 'max_size', 'upload_path', 'rule', 'error_msg');
 		
 		foreach($copyList as $attrib) {
 			if(isset($columnData[$attrib])) {
