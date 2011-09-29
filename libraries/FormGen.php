@@ -357,7 +357,8 @@ EOL;
 			if($columnData['type'] == 'checkbox' && (empty($columnData['values']) || !is_array($columnData['values']))) {
 				Kohana::log('error', 'CRUD form generator found select values error for field '.$columnName);
 			} else {			
-				// this is for convience, it will automatically generate 
+				// this is for convience, it will automatically generate computer values if we have a non-assoc array of values
+				
 				if(!array_is_assoc($columnData['values'])) {
 					$optionValues = array_values($columnData['values']);
 					$optionKeys = array();

@@ -45,3 +45,6 @@ if($contactForm->process()) {
 	));
 }
 ```
+
+Notes  
+ * When using FormGen, and using the formo mselect module, be sure to include [] after the element name
