@@ -28,7 +28,7 @@ EOL;
 $config['datepicker_javascript'] = <<<EOL
 new DatePicker(".%s", {
 	format: "%s",
-	pickerClass: "datepicker_dashboard",
+	pickerClass: "datepicker_dashboard_old",
 	allowEmpty: true
 });
 
@@ -36,7 +36,7 @@ EOL;
 
 $config['datetimepicker_javascript'] = <<<EOL
 new DatePicker('.%s', {
-	pickerClass:'datepicker_dashboard',
+	pickerClass:'datepicker_dashboard_old',
 	format:'%s',
 	timePicker: true,
 	allowEmpty: true
