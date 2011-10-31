@@ -63,6 +63,7 @@ class FormGen_Core extends Controller {
 			// copy some of the special base_config options
 			if(!empty($this->base_config['form_class'])) $this->form_class = $this->base_config['form_class'];
 			if(!empty($this->base_config['form_name'])) $this->form_name = $this->base_config['form_name'];
+			if(!empty($this->base_config['form_action'])) $this->form_action = $this->base_config['form_action'];
 		}
 		
 		// note that base_config should contain the following:
